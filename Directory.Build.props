@@ -1,0 +1,13 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Package Versions">
+    <EFCoreVersion>3.0.0-preview9.19423.6</EFCoreVersion>
+    <MicrosoftExtensionsVersion>3.0.0-preview9.19423.4</MicrosoftExtensionsVersion>
+  </PropertyGroup>
+
+</Project>

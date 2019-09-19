@@ -1,0 +1,24 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.NamingConventions", "EFCore.NamingConventions\EFCore.NamingConventions.csproj", "{F7AE70A6-D237-4257-84F4-A32375E78E10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.NamingConventions.Test", "EFCore.NamingConventions.Test\EFCore.NamingConventions.Test.csproj", "{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7AE70A6-D237-4257-84F4-A32375E78E10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7AE70A6-D237-4257-84F4-A32375E78E10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7AE70A6-D237-4257-84F4-A32375E78E10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7AE70A6-D237-4257-84F4-A32375E78E10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal
