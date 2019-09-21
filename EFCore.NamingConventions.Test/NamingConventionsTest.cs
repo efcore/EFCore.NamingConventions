@@ -29,7 +29,7 @@ namespace EFCore.Naming.Test
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => optionsBuilder
                     .UseInMemoryDatabase("test")
-                    .UseSnakeCaseNamingConventions();
+                    .UseSnakeCaseNamingConvention();
         }
 
         public class Blog

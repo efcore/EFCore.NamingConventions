@@ -30,7 +30,7 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
-        public virtual NamingConventionsOptionsExtension WithSnakeCaseNaming()
+        public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention()
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.SnakeCase;
@@ -63,7 +63,7 @@ namespace EFCore.NamingConventions.Internal
             public override long GetServiceProviderHashCode() => Extension._namingConvention.GetHashCode();
 
             public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
-                => debugInfo["Naming:" + nameof(NamingConventionsExtensions.UseSnakeCaseNamingConventions)]
+                => debugInfo["Naming:" + nameof(NamingConventionsExtensions.UseSnakeCaseNamingConvention)]
                     = Extension._namingConvention.GetHashCode().ToString(CultureInfo.InvariantCulture);
         }
     }

@@ -22,7 +22,7 @@ Down with same-name identifier tyranny! Simply add a reference to [EFCore.Naming
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     => optionsBuilder
         .UseNpgsql(...)
-        .UseSnakeCaseNamingConventions();
+        .UseSnakeCaseNamingConvention();
 ```
 
 This will automatically make all your table and column names have snake_case naming:
