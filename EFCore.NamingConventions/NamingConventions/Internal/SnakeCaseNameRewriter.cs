@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Text;
 
@@ -7,19 +8,19 @@ namespace EFCore.NamingConventions.Internal
     {
         protected override string RewriteName(string name)
         {
-            const char underscore = '_';
-            const UnicodeCategory noneCategory = UnicodeCategory.Control;
+            if (string.IsNullOrEmpty(name))
+                return name;
 
-            var builder = new StringBuilder();
-            var previousCategory = noneCategory;
+            var builder = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
+            var previousCategory = default(UnicodeCategory?);
 
             for (var currentIndex = 0; currentIndex < name.Length; currentIndex++)
             {
                 var currentChar = name[currentIndex];
-                if (currentChar == underscore)
+                if (currentChar == '_')
                 {
-                    builder.Append(underscore);
-                    previousCategory = noneCategory;
+                    builder.Append('_');
+                    previousCategory = null;
                     continue;
                 }
 
@@ -31,11 +32,12 @@ namespace EFCore.NamingConventions.Internal
                     if (previousCategory == UnicodeCategory.SpaceSeparator ||
                         previousCategory == UnicodeCategory.LowercaseLetter ||
                         previousCategory != UnicodeCategory.DecimalDigitNumber &&
+                        previousCategory != null &&
                         currentIndex > 0 &&
                         currentIndex + 1 < name.Length &&
                         char.IsLower(name[currentIndex + 1]))
                     {
-                        builder.Append(underscore);
+                        builder.Append('_');
                     }
 
                     currentChar = char.ToLower(currentChar);
@@ -44,11 +46,11 @@ namespace EFCore.NamingConventions.Internal
                 case UnicodeCategory.LowercaseLetter:
                 case UnicodeCategory.DecimalDigitNumber:
                     if (previousCategory == UnicodeCategory.SpaceSeparator)
-                        builder.Append(underscore);
+                        builder.Append('_');
                     break;
 
                 default:
-                    if (previousCategory != noneCategory)
+                    if (previousCategory != null)
                         previousCategory = UnicodeCategory.SpaceSeparator;
                     continue;
                 }
