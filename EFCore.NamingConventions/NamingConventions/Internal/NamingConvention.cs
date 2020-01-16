@@ -4,6 +4,7 @@ namespace EFCore.NamingConventions.Internal
     {
         None,
         SnakeCase,
-        LowerCase
+        LowerCase,
+        UpperCase
     }
 }

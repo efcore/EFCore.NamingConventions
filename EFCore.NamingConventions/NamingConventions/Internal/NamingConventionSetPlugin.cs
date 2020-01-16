@@ -23,6 +23,7 @@ namespace EFCore.NamingConventions.Internal
             {
                 NamingConvention.SnakeCase => new SnakeCaseNameRewriter(),
                 NamingConvention.LowerCase => new LowerCaseNameRewriter(),
+                NamingConvention.UpperCase => new UpperCaseNameRewriter(),
                 _ => throw new NotImplementedException("Unhandled enum value: " + namingStyle)
             };
 

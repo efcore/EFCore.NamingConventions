@@ -44,6 +44,13 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
+        public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention()
+        {
+            var clone = Clone();
+            clone._namingConvention = NamingConvention.UpperCase;
+            return clone;
+        }
+
         public void Validate(IDbContextOptions options) {}
 
         public void ApplyServices(IServiceCollection services)
@@ -65,6 +72,7 @@ namespace EFCore.NamingConventions.Internal
                 {
                     NamingConvention.SnakeCase => "using snake-case naming ",
                     NamingConvention.LowerCase => "using lower case naming",
+                    NamingConvention.UpperCase => "using upper case naming",
                     _ => ""
                 };
 
