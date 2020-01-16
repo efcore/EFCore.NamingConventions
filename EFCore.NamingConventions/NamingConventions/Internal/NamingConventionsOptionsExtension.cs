@@ -37,6 +37,13 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
+        public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention()
+        {
+            var clone = Clone();
+            clone._namingConvention = NamingConvention.AllLowerCase;
+            return clone;
+        }
+
         public void Validate(IDbContextOptions options) {}
 
         public void ApplyServices(IServiceCollection services)
@@ -57,13 +64,14 @@ namespace EFCore.NamingConventions.Internal
                 => _logFragment ??= Extension._namingConvention switch
                 {
                     NamingConvention.SnakeCase => "using snake-case naming ",
+                    NamingConvention.AllLowerCase => "using lower case naming",
                     _ => ""
                 };
 
             public override long GetServiceProviderHashCode() => Extension._namingConvention.GetHashCode();
 
             public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
-                => debugInfo["Naming:" + nameof(NamingConventionsExtensions.UseSnakeCaseNamingConvention)]
+                => debugInfo["Naming:" + nameof(NamingConventionsOptionsExtension)]
                     = Extension._namingConvention.GetHashCode().ToString(CultureInfo.InvariantCulture);
         }
     }

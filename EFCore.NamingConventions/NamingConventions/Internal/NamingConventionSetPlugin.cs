@@ -19,9 +19,10 @@ namespace EFCore.NamingConventions.Internal
             if (namingStyle == NamingConvention.None)
                 return conventionSet;
 
-            var nameRewriter = namingStyle switch
+            NameRewriterBase nameRewriter = namingStyle switch
             {
                 NamingConvention.SnakeCase => new SnakeCaseNameRewriter(),
+                NamingConvention.AllLowerCase => new LowerCaseNameRewriter(),
                 _ => throw new NotImplementedException("Unhandled enum value: " + namingStyle)
             };
 

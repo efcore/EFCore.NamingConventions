@@ -6,16 +6,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EFCore.NamingConventions.Internal
 {
-    class SnakeCaseNameRewriter : IEntityTypeAddedConvention, IPropertyAddedConvention
+    class SnakeCaseNameRewriter : NameRewriterBase
     {
-        public void ProcessEntityTypeAdded(
+        public override void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder,
             IConventionContext<IConventionEntityTypeBuilder> context)
             => entityTypeBuilder.ToTable(
                 ConvertToSnakeCase(entityTypeBuilder.Metadata.GetTableName()),
                 entityTypeBuilder.Metadata.GetSchema());
 
-        public void ProcessPropertyAdded(
+        public override void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder,
             IConventionContext<IConventionPropertyBuilder> context)
             => propertyBuilder.HasColumnName(
