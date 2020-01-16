@@ -22,6 +22,14 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("full_name", entityType.FindProperty("FullName").GetColumnName());
         }
 
+        [Fact]
+        public void Owned_entity_name_is_correct_when_configured()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(OwnedStatistics));
+            Assert.Equal("simple_blog", entityType.GetTableName());
+        }
+
         TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseSnakeCaseNamingConvention);
     }
 }

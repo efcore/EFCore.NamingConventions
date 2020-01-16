@@ -14,6 +14,9 @@ namespace EFCore.NamingConventions.Test
 
             public DbSet<SimpleBlog> Blog { get; set; }
 
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+                => modelBuilder.Entity<SimpleBlog>().OwnsOne(p => p.OwnedStatistics);
+
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"));
         }
@@ -22,6 +25,13 @@ namespace EFCore.NamingConventions.Test
         {
             public int Id { get; set; }
             public string FullName { get; set; }
+
+            public OwnedStatistics OwnedStatistics { get; set; }
+        }
+
+        public class OwnedStatistics
+        {
+            public int SomeStatistic { get; set; }
         }
     }
 }
