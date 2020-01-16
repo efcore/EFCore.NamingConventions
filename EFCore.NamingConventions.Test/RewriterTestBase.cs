@@ -1,7 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace EFCore.Naming.Test
+namespace EFCore.NamingConventions.Test
 {
     public abstract class RewriterTestBase
     {

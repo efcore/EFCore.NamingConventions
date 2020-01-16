@@ -1,8 +1,7 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace EFCore.Naming.Test
+namespace EFCore.NamingConventions.Test
 {
     public class UpperCaseNamingTest : RewriterTestBase
     {
