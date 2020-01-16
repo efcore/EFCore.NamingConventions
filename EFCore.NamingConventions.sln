@@ -4,6 +4,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.NamingConventions", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore.NamingConventions.Test", "EFCore.NamingConventions.Test\EFCore.NamingConventions.Test.csproj", "{AF58C6DC-FF41-4019-B4F3-B8D59A2DAD5F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F6BE1E4F-B395-456A-9856-0C9AE4F626C0}"
+ProjectSection(SolutionItems) = preProject
+	Directory.Build.props = Directory.Build.props
+	Directory.Build.targets = Directory.Build.targets
+	.github\workflows\build.yml = .github\workflows\build.yml
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
