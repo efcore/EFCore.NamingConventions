@@ -1,27 +1,11 @@
 using System.Globalization;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EFCore.NamingConventions.Internal
 {
     class SnakeCaseNameRewriter : NameRewriterBase
     {
-        public override void ProcessEntityTypeAdded(
-            IConventionEntityTypeBuilder entityTypeBuilder,
-            IConventionContext<IConventionEntityTypeBuilder> context)
-            => entityTypeBuilder.ToTable(
-                ConvertToSnakeCase(entityTypeBuilder.Metadata.GetTableName()),
-                entityTypeBuilder.Metadata.GetSchema());
-
-        public override void ProcessPropertyAdded(
-            IConventionPropertyBuilder propertyBuilder,
-            IConventionContext<IConventionPropertyBuilder> context)
-            => propertyBuilder.HasColumnName(
-                ConvertToSnakeCase(propertyBuilder.Metadata.GetColumnName()));
-
-        static string ConvertToSnakeCase(string value)
+        protected override string RewriteName(string name)
         {
             const char underscore = '_';
             const UnicodeCategory noneCategory = UnicodeCategory.Control;
@@ -29,9 +13,9 @@ namespace EFCore.NamingConventions.Internal
             var builder = new StringBuilder();
             var previousCategory = noneCategory;
 
-            for (var currentIndex = 0; currentIndex < value.Length; currentIndex++)
+            for (var currentIndex = 0; currentIndex < name.Length; currentIndex++)
             {
-                var currentChar = value[currentIndex];
+                var currentChar = name[currentIndex];
                 if (currentChar == underscore)
                 {
                     builder.Append(underscore);
@@ -48,8 +32,8 @@ namespace EFCore.NamingConventions.Internal
                         previousCategory == UnicodeCategory.LowercaseLetter ||
                         previousCategory != UnicodeCategory.DecimalDigitNumber &&
                         currentIndex > 0 &&
-                        currentIndex + 1 < value.Length &&
-                        char.IsLower(value[currentIndex + 1]))
+                        currentIndex + 1 < name.Length &&
+                        char.IsLower(name[currentIndex + 1]))
                     {
                         builder.Append(underscore);
                     }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
@@ -8,8 +9,17 @@ namespace EFCore.NamingConventions.Internal
     /// </summary>
     internal abstract class NameRewriterBase : IEntityTypeAddedConvention, IPropertyAddedConvention
     {
-        public abstract void ProcessEntityTypeAdded(IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context);
+        public virtual void ProcessEntityTypeAdded(
+            IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
+            => entityTypeBuilder.ToTable(
+                RewriteName(entityTypeBuilder.Metadata.GetTableName()),
+                entityTypeBuilder.Metadata.GetSchema());
 
-        public abstract void ProcessPropertyAdded(IConventionPropertyBuilder propertyBuilder, IConventionContext<IConventionPropertyBuilder> context);
+        public virtual void ProcessPropertyAdded(
+            IConventionPropertyBuilder propertyBuilder, IConventionContext<IConventionPropertyBuilder> context)
+            => propertyBuilder.HasColumnName(
+                RewriteName(propertyBuilder.Metadata.GetColumnName()));
+
+        protected abstract string RewriteName(string name);
     }
 }
