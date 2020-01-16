@@ -22,7 +22,7 @@ namespace EFCore.NamingConventions.Internal
             NameRewriterBase nameRewriter = namingStyle switch
             {
                 NamingConvention.SnakeCase => new SnakeCaseNameRewriter(),
-                NamingConvention.AllLowerCase => new LowerCaseNameRewriter(),
+                NamingConvention.LowerCase => new LowerCaseNameRewriter(),
                 _ => throw new NotImplementedException("Unhandled enum value: " + namingStyle)
             };
 

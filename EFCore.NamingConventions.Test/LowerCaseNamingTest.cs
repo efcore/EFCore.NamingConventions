@@ -3,7 +3,7 @@ using Xunit;
 
 namespace EFCore.Naming.Test
 {
-    public class LowerNamingTest
+    public class LowerCaseNamingTest
     {
         [Fact]
         public void Table_name_is_rewritten()

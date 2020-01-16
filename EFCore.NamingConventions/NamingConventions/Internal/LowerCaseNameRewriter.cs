@@ -7,11 +7,11 @@ namespace EFCore.NamingConventions.Internal
     class LowerCaseNameRewriter : NameRewriterBase
     {
         public override void ProcessEntityTypeAdded(
-                    IConventionEntityTypeBuilder entityTypeBuilder,
-                    IConventionContext<IConventionEntityTypeBuilder> context)
-                    => entityTypeBuilder.ToTable(
-                        entityTypeBuilder.Metadata.GetTableName().ToLowerInvariant(),
-                        entityTypeBuilder.Metadata.GetSchema());
+            IConventionEntityTypeBuilder entityTypeBuilder,
+            IConventionContext<IConventionEntityTypeBuilder> context)
+            => entityTypeBuilder.ToTable(
+                entityTypeBuilder.Metadata.GetTableName().ToLowerInvariant(),
+                entityTypeBuilder.Metadata.GetSchema());
 
         public override void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder,

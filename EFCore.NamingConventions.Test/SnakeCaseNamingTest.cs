@@ -3,7 +3,7 @@ using Xunit;
 
 namespace EFCore.Naming.Test
 {
-    public class SnakeNamingTest
+    public class SnakeCaseNamingTest
     {
         [Fact]
         public void Table_name_is_rewritten()
