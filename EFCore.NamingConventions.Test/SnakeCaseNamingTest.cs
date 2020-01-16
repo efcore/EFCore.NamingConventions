@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -28,6 +29,30 @@ namespace EFCore.NamingConventions.Test
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(OwnedStatistics));
             Assert.Equal("simple_blog", entityType.GetTableName());
+        }
+
+        [Fact]
+        public void Primary_key_name_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
+            Assert.Equal("pk_simple_blog", entityType.GetKeys().Single().GetName());
+        }
+
+        [Fact]
+        public void Foreign_key_name_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(Post));
+            Assert.Equal("fk_post_simple_blog_blog_id", entityType.GetForeignKeys().Single().GetConstraintName());
+        }
+
+        [Fact]
+        public void Index_name_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
+            Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetName());
         }
 
         TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseSnakeCaseNamingConvention);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCore.NamingConventions.Test
@@ -15,7 +16,10 @@ namespace EFCore.NamingConventions.Test
             public DbSet<SimpleBlog> Blog { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
-                => modelBuilder.Entity<SimpleBlog>().OwnsOne(p => p.OwnedStatistics);
+            {
+                modelBuilder.Entity<SimpleBlog>(e => e.HasIndex(b => b.FullName));
+                modelBuilder.Entity<SimpleBlog>().OwnsOne(p => p.OwnedStatistics);
+            }
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"));
@@ -26,7 +30,18 @@ namespace EFCore.NamingConventions.Test
             public int Id { get; set; }
             public string FullName { get; set; }
 
+            public List<Post> Posts { get; set; }
+
             public OwnedStatistics OwnedStatistics { get; set; }
+        }
+
+        public class Post
+        {
+            public int Id { get; set; }
+            public string FullName { get; set; }
+
+            public int BlogId { get; set; }
+            public SimpleBlog Blog { get; set; }
         }
 
         public class OwnedStatistics
