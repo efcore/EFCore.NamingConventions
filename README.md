@@ -1,5 +1,7 @@
 # Naming Conventions for Entity Framework Core Tables and Columns
 
+[![Nuget](https://img.shields.io/nuget/v/EFCore.NamingConventions)](https://www.nuget.org/packages/EFCore.NamingConventions/)
+
 By default, EF Core will map to tables and columns named exactly after your .NET classes and properties. For example, mapping a typical Customer class to PostgreSQL will result in SQL such as the following:
 
 ```sql
