@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>EFCore.NamingConventions</AssemblyName>
     <RootNamespace>EFCore</RootNamespace>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <VersionPrefix>1.0.0</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
@@ -11,7 +11,7 @@
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>
     <Description>Naming Conventions for Entity Framework Core Tables and Columns.</Description>
     <Authors>Shay Rojansky</Authors>
-    <Copyright>Copyright 2019 © Shay Rojansky</Copyright>
+    <Copyright>Copyright 2020 © Shay Rojansky</Copyright>
     <PackageTags>Entity Framework Core;entity-framework-core;ef;efcore;orm;sql;postgresql;npgsql</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
