@@ -10,7 +10,8 @@ namespace EFCore.NamingConventions.Internal
     /// </summary>
     internal abstract class NameRewriterBase :
         IEntityTypeAddedConvention, IPropertyAddedConvention, IForeignKeyOwnershipChangedConvention,
-        IEntityTypePrimaryKeyChangedConvention, IForeignKeyAddedConvention, IIndexAddedConvention
+        IKeyAddedConvention, IForeignKeyAddedConvention,
+        IIndexAddedConvention
     {
         public virtual void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
@@ -33,13 +34,8 @@ namespace EFCore.NamingConventions.Internal
             }
         }
 
-        public void ProcessEntityTypePrimaryKeyChanged(
-            IConventionEntityTypeBuilder entityTypeBuilder,
-            IConventionKey newPrimaryKey,
-            IConventionKey previousPrimaryKey, IConventionContext<IConventionKey> context)
-        {
-            newPrimaryKey?.Builder?.HasName(RewriteName(newPrimaryKey.GetName()));
-        }
+        public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
+            => keyBuilder.HasName(RewriteName(keyBuilder.Metadata.GetName()));
 
         public void ProcessForeignKeyAdded(
             IConventionRelationshipBuilder relationshipBuilder,

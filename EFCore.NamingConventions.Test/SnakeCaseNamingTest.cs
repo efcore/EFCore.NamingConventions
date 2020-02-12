@@ -36,7 +36,15 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("pk_simple_blog", entityType.GetKeys().Single().GetName());
+            Assert.Equal("pk_simple_blog", entityType.GetKeys().Single(k => k.IsPrimaryKey()).GetName());
+        }
+
+        [Fact]
+        public void Alternative_key_name_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
+            Assert.Equal("ak_simple_blog_some_alternative_key", entityType.GetKeys().Single(k => !k.IsPrimaryKey()).GetName());
         }
 
         [Fact]
@@ -54,7 +62,7 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetName());
         }
-
+        
         TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseSnakeCaseNamingConvention);
     }
 }

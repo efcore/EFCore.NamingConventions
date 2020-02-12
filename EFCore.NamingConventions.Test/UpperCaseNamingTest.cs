@@ -28,7 +28,15 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("PK_SIMPLEBLOG", entityType.GetKeys().Single().GetName());
+            Assert.Equal("PK_SIMPLEBLOG", entityType.GetKeys().Single(k => k.IsPrimaryKey()).GetName());
+        }
+
+        [Fact]
+        public void Alternative_key_name_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
+            Assert.Equal("AK_SIMPLEBLOG_SOMEALTERNATIVEKEY", entityType.GetKeys().Single(k => !k.IsPrimaryKey()).GetName());
         }
 
         [Fact]

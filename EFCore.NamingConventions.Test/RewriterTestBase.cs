@@ -16,10 +16,12 @@ namespace EFCore.NamingConventions.Test
             public DbSet<SimpleBlog> Blog { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                modelBuilder.Entity<SimpleBlog>(e => e.HasIndex(b => b.FullName));
-                modelBuilder.Entity<SimpleBlog>().OwnsOne(p => p.OwnedStatistics);
-            }
+                => modelBuilder.Entity<SimpleBlog>(e =>
+                {
+                    e.HasIndex(b => b.FullName);
+                    e.OwnsOne(b => b.OwnedStatistics);
+                    e.HasAlternateKey(b => b.SomeAlternativeKey);
+                });
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"));
@@ -29,6 +31,7 @@ namespace EFCore.NamingConventions.Test
         {
             public int Id { get; set; }
             public string FullName { get; set; }
+            public int SomeAlternativeKey { get; set; }
 
             public List<Post> Posts { get; set; }
 

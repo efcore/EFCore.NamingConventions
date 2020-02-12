@@ -30,7 +30,7 @@ namespace EFCore.NamingConventions.Internal
             conventionSet.EntityTypeAddedConventions.Add(nameRewriter);
             conventionSet.PropertyAddedConventions.Add(nameRewriter);
             conventionSet.ForeignKeyOwnershipChangedConventions.Add(nameRewriter);
-            conventionSet.EntityTypePrimaryKeyChangedConventions.Add(nameRewriter);
+            conventionSet.KeyAddedConventions.Add(nameRewriter);
             conventionSet.ForeignKeyAddedConventions.Add(nameRewriter);
             conventionSet.IndexAddedConventions.Add(nameRewriter);
 
