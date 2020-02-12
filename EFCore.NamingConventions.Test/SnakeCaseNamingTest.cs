@@ -62,7 +62,7 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetName());
         }
-        
+
         TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseSnakeCaseNamingConvention);
     }
 }
