@@ -18,7 +18,7 @@ SELECT c."Id", c."FullName"
 
 For PostgreSQL specifically, this forces double-quotes to be added since unquoted identifiers are automatically converted to lower-case - and all those quotes are an eye-sore. But even if we're using another database such as SQL Server, maybe we just hate seeing upper-case letters in our database, and would rather have another naming convention.
 
-Down with same-name identifier tyranny! Simply add a reference to [EFCore.NamingConventions](https://www.nuget.org/packages/EFCore.NamingConventions/1.0.0-rc1) and enable a naming convention in your model's `OnConfiguring` method:
+Down with same-name identifier tyranny! Simply add a reference to [EFCore.NamingConventions](https://www.nuget.org/packages/EFCore.NamingConventions/) and enable a naming convention in your model's `OnConfiguring` method:
 
 ```c#
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
