@@ -4,6 +4,9 @@ namespace EFCore.NamingConventions.Internal
 {
     class LowerCaseNameRewriter : NameRewriterBase
     {
-        protected override string RewriteName(string name,CultureInfo info = null) => name.ToLower(info ?? CultureInfo.InvariantCulture);
+        readonly CultureInfo _cultureInfo;
+
+        public LowerCaseNameRewriter(CultureInfo cultureInfo = null) => _cultureInfo = cultureInfo;
+        protected override string RewriteName(string name) => name.ToLower(_cultureInfo ?? CultureInfo.InvariantCulture);
     }
 }

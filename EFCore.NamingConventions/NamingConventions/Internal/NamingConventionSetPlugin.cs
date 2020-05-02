@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
@@ -9,21 +10,22 @@ namespace EFCore.NamingConventions.Internal
     public class NamingConventionSetPlugin : IConventionSetPlugin
     {
         readonly IDbContextOptions _options;
-
         public NamingConventionSetPlugin([NotNull] IDbContextOptions options) => _options = options;
 
         public ConventionSet ModifyConventions(ConventionSet conventionSet)
         {
-            var namingStyle = _options.FindExtension<NamingConventionsOptionsExtension>().NamingConvention;
-
+       
+          var extension =  _options.FindExtension<NamingConventionsOptionsExtension>();
+          var namingStyle = extension.NamingConvention;
+          var culture = extension.Culture;
             if (namingStyle == NamingConvention.None)
                 return conventionSet;
 
             NameRewriterBase nameRewriter = namingStyle switch
             {
-                NamingConvention.SnakeCase => new SnakeCaseNameRewriter(),
-                NamingConvention.LowerCase => new LowerCaseNameRewriter(),
-                NamingConvention.UpperCase => new UpperCaseNameRewriter(),
+                NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
+                NamingConvention.LowerCase => new LowerCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
+                NamingConvention.UpperCase => new UpperCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 _ => throw new NotImplementedException("Unhandled enum value: " + namingStyle)
             };
 

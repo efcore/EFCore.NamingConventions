@@ -6,7 +6,11 @@ namespace EFCore.NamingConventions.Internal
 {
     class SnakeCaseNameRewriter : NameRewriterBase
     {
-        protected override string RewriteName(string name,CultureInfo info = null)
+        private readonly CultureInfo _cultureInfo;
+
+        public SnakeCaseNameRewriter(CultureInfo cultureInfo) => _cultureInfo = cultureInfo;
+
+        protected override string RewriteName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 return name;
@@ -40,7 +44,7 @@ namespace EFCore.NamingConventions.Internal
                         builder.Append('_');
                     }
 
-                    currentChar = char.ToLower(currentChar,info ?? CultureInfo.InvariantCulture);
+                    currentChar = char.ToLower(currentChar, _cultureInfo ?? CultureInfo.InvariantCulture);
                     break;
 
                 case UnicodeCategory.LowercaseLetter:

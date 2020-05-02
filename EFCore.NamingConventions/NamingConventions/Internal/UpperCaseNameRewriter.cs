@@ -4,6 +4,9 @@ namespace EFCore.NamingConventions.Internal
 {
     class UpperCaseNameRewriter : NameRewriterBase
     {
-        protected override string RewriteName(string name,CultureInfo info = null ) => name.ToUpper(info ?? CultureInfo.InvariantCulture);
+        readonly CultureInfo _cultureInfo;
+
+        public UpperCaseNameRewriter(CultureInfo cultureInfo = null) => _cultureInfo = cultureInfo;
+        protected override string RewriteName(string name) => name.ToUpper(_cultureInfo ?? CultureInfo.InvariantCulture);
     }
 }

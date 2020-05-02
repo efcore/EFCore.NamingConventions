@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 
 namespace EFCore.NamingConventions.Test
@@ -8,10 +9,10 @@ namespace EFCore.NamingConventions.Test
     {
         public class TestContext : DbContext
         {
-            readonly Func<DbContextOptionsBuilder, DbContextOptionsBuilder> _useNamingConvention;
-            
-            public TestContext(Func<DbContextOptionsBuilder, DbContextOptionsBuilder> useNamingConvention)
-                => _useNamingConvention = useNamingConvention;
+            readonly Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> _useNamingConvention;
+
+          
+            public TestContext(Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> useNamingConvention) => _useNamingConvention = useNamingConvention;
 
             public DbSet<SimpleBlog> Blog { get; set; }
 
@@ -24,7 +25,7 @@ namespace EFCore.NamingConventions.Test
                 });
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-                => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"));
+                => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"),null);
         }
 
         public class SimpleBlog

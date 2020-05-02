@@ -48,6 +48,6 @@ namespace EFCore.NamingConventions.Internal
             IConventionContext<IConventionIndexBuilder> context)
             => indexBuilder.HasName(RewriteName(indexBuilder.Metadata.GetName()));
 
-        protected abstract string RewriteName(string name, CultureInfo info = null);
+        protected abstract string RewriteName(string name);
     }
 }
