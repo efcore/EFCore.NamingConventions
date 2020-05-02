@@ -10,9 +10,14 @@ namespace EFCore.NamingConventions.Test
         public class TestContext : DbContext
         {
             readonly Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> _useNamingConvention;
+            readonly CultureInfo _cultureInfo;
 
-          
-            public TestContext(Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> useNamingConvention) => _useNamingConvention = useNamingConvention;
+
+            public TestContext(Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> useNamingConvention, CultureInfo cultureInfo = null)
+            {
+                _useNamingConvention = useNamingConvention;
+                _cultureInfo = cultureInfo ?? CultureInfo.InvariantCulture;
+            }
 
             public DbSet<SimpleBlog> Blog { get; set; }
 
@@ -25,7 +30,7 @@ namespace EFCore.NamingConventions.Test
                 });
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-                => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"),null);
+                => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"), _cultureInfo);
         }
 
         public class SimpleBlog
