@@ -44,7 +44,7 @@ namespace EFCore.NamingConventions.Internal
                         builder.Append('_');
                     }
 
-                    currentChar = char.ToLower(currentChar, _cultureInfo ?? CultureInfo.InvariantCulture);
+                    currentChar = char.ToLower(currentChar, _cultureInfo);
                     break;
 
                 case UnicodeCategory.LowercaseLetter:

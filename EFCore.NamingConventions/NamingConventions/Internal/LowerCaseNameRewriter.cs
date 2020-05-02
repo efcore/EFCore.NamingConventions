@@ -6,7 +6,7 @@ namespace EFCore.NamingConventions.Internal
     {
         readonly CultureInfo _cultureInfo;
 
-        public LowerCaseNameRewriter(CultureInfo cultureInfo = null) => _cultureInfo = cultureInfo;
-        protected override string RewriteName(string name) => name.ToLower(_cultureInfo ?? CultureInfo.InvariantCulture);
+        public LowerCaseNameRewriter(CultureInfo cultureInfo) => _cultureInfo = cultureInfo;
+        protected override string RewriteName(string name) => name.ToLower(_cultureInfo);
     }
 }
