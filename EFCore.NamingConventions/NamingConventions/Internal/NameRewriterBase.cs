@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -47,6 +48,6 @@ namespace EFCore.NamingConventions.Internal
             IConventionContext<IConventionIndexBuilder> context)
             => indexBuilder.HasName(RewriteName(indexBuilder.Metadata.GetName()));
 
-        protected abstract string RewriteName(string name);
+        protected abstract string RewriteName(string name, CultureInfo info = null);
     }
 }
