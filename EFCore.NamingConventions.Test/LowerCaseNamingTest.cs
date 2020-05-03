@@ -23,7 +23,7 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
         }
-        
+
         [Fact]
         public void Column_name_is_rewritten_in_turkish()
         {
