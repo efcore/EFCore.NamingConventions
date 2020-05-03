@@ -30,6 +30,7 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("SIMPLEBLOG", entityType.GetTableName());
         }
+
         [Fact]
         public void Column_name_is_rewritten()
         {
