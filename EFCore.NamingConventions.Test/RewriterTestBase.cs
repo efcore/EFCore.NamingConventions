@@ -11,8 +11,6 @@ namespace EFCore.NamingConventions.Test
         {
             readonly Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> _useNamingConvention;
             readonly CultureInfo _culture;
-
-
             public TestContext(Func<DbContextOptionsBuilder, CultureInfo, DbContextOptionsBuilder> useNamingConvention, CultureInfo culture = null)
             {
                 _useNamingConvention = useNamingConvention;
