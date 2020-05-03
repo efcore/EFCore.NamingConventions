@@ -38,6 +38,7 @@ namespace EFCore.NamingConventions.Internal
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.SnakeCase;
+            clone._culture = culture;
             return clone;
         }
 
@@ -45,6 +46,7 @@ namespace EFCore.NamingConventions.Internal
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.LowerCase;
+            clone._culture = culture;
             return clone;
         }
 
@@ -52,6 +54,7 @@ namespace EFCore.NamingConventions.Internal
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.UpperCase;
+            clone._culture = culture;
             return clone;
         }
 

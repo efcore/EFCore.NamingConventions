@@ -1,10 +1,11 @@
+﻿using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace EFCore.NamingConventions.Test
 {
-    public class LowerCaseNamingTest : RewriterTestBase
+    public class LowerCaseNamingWithCultureTest : RewriterTestBase
     {
         [Fact]
         public void Table_name_is_rewritten()
@@ -19,7 +20,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
+            Assert.Equal("ıd", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
         }
 
@@ -44,7 +45,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(Post));
-            Assert.Equal("fk_post_simpleblog_blogid", entityType.GetForeignKeys().Single().GetConstraintName());
+            Assert.Equal("fk_post_simpleblog_blogıd", entityType.GetForeignKeys().Single().GetConstraintName());
         }
 
         [Fact]
@@ -52,9 +53,9 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("ix_simpleblog_fullname", entityType.GetIndexes().Single().GetName());
+            Assert.Equal("ıx_simpleblog_fullname", entityType.GetIndexes().Single().GetName());
         }
 
-        TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseLowerCaseNamingConvention);
+        TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseLowerCaseNamingConvention, CultureInfo.CreateSpecificCulture("tr_TR"));
     }
 }

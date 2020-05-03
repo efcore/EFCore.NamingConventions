@@ -1,11 +1,10 @@
-using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace EFCore.NamingConventions.Test
 {
-    public class LowerCaseNamingWithCultureTest : RewriterTestBase
+    public class LowerCaseNamingTest : RewriterTestBase
     {
         [Fact]
         public void Table_name_is_rewritten()
@@ -56,6 +55,6 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ix_simpleblog_fullname", entityType.GetIndexes().Single().GetName());
         }
 
-        TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseLowerCaseNamingConvention, CultureInfo.CreateSpecificCulture("tr_TR"));
+        TestContext CreateContext() => new TestContext(NamingConventionsExtensions.UseLowerCaseNamingConvention);
     }
 }
