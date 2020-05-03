@@ -8,52 +8,52 @@ namespace Microsoft.EntityFrameworkCore
 {
     public static class NamingConventionsExtensions
     {
-        public static DbContextOptionsBuilder UseSnakeCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder , CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder UseSnakeCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder , CultureInfo culture = null)
         {
             Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
             var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>() ?? new NamingConventionsOptionsExtension())
-                .WithSnakeCaseNamingConvention(cultureInfo);
+                .WithSnakeCaseNamingConvention(culture);
 
             ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             return optionsBuilder;
         }
 
-        public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,cultureInfo);
+            => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
 
-        public static DbContextOptionsBuilder UseLowerCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder UseLowerCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
             Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
             var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>() ?? new NamingConventionsOptionsExtension())
-                .WithLowerCaseNamingConvention(cultureInfo);
+                .WithLowerCaseNamingConvention(culture);
 
             ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             return optionsBuilder;
         }
 
-        public static DbContextOptionsBuilder<TContext> UseLowerCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder<TContext> UseLowerCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,cultureInfo);
+            => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
 
-        public static DbContextOptionsBuilder UseUpperCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder UseUpperCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
             Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
             var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>() ?? new NamingConventionsOptionsExtension())
-                .WithUpperCaseNamingConvention(cultureInfo);
+                .WithUpperCaseNamingConvention(culture);
 
             ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             return optionsBuilder;
         }
 
-        public static DbContextOptionsBuilder<TContext> UseUpperCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo cultureInfo = null)
+        public static DbContextOptionsBuilder<TContext> UseUpperCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,cultureInfo);
+            => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
     }
 }

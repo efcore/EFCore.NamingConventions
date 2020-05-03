@@ -14,13 +14,11 @@ namespace EFCore.NamingConventions.Internal
 
         public ConventionSet ModifyConventions(ConventionSet conventionSet)
         {
-       
           var extension =  _options.FindExtension<NamingConventionsOptionsExtension>();
           var namingStyle = extension.NamingConvention;
           var culture = extension.Culture;
             if (namingStyle == NamingConvention.None)
                 return conventionSet;
-
             NameRewriterBase nameRewriter = namingStyle switch
             {
                 NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
