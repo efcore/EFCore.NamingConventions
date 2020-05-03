@@ -70,6 +70,7 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("IX_SIMPLEBLOG_FULLNAME", entityType.GetIndexes().Single().GetName());
         }
+
         TestContext CreateContext(CultureInfo culture = null) => new TestContext((builder) => builder.UseUpperCaseNamingConvention(culture));
     }
 }

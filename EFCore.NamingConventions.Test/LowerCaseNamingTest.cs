@@ -15,9 +15,6 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("simpleblog", entityType.GetTableName());
         }
 
-
-    
-
         [Fact]
         public void Column_name_is_rewritten()
         {
@@ -25,7 +22,8 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
-        }   
+        }
+        
         [Fact]
         public void Column_name_is_rewritten_in_turkish()
         {
@@ -34,6 +32,7 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ıd", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
         }
+
         [Fact]
         public void Column_name_is_rewritten_in_invariant()
         {
@@ -42,6 +41,7 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
         }
+
         [Fact]
         public void Primary_key_name_is_rewritten()
         {
