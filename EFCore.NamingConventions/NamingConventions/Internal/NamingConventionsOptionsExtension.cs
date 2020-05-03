@@ -12,8 +12,8 @@ namespace EFCore.NamingConventions.Internal
         DbContextOptionsExtensionInfo _info;
         NamingConvention _namingConvention;
         CultureInfo _culture;
-        public NamingConventionsOptionsExtension() {}
 
+        public NamingConventionsOptionsExtension() {}
         protected NamingConventionsOptionsExtension([NotNull] NamingConventionsOptionsExtension copyFrom)
         {
             _namingConvention = copyFrom._namingConvention;
