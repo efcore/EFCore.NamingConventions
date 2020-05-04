@@ -9,8 +9,7 @@ namespace EFCore.NamingConventions.Test
         public class TestContext : DbContext
         {
             readonly Func<DbContextOptionsBuilder, DbContextOptionsBuilder> _useNamingConvention;
-            
-            public TestContext(Func<DbContextOptionsBuilder, DbContextOptionsBuilder> useNamingConvention)
+            public TestContext(Func<DbContextOptionsBuilder, DbContextOptionsBuilder> useNamingConvention) 
                 => _useNamingConvention = useNamingConvention;
 
             public DbSet<SimpleBlog> Blog { get; set; }

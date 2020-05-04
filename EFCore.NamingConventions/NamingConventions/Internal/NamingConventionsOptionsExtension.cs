@@ -11,17 +11,21 @@ namespace EFCore.NamingConventions.Internal
     {
         DbContextOptionsExtensionInfo _info;
         NamingConvention _namingConvention;
+        CultureInfo _culture;
 
         public NamingConventionsOptionsExtension() {}
-
         protected NamingConventionsOptionsExtension([NotNull] NamingConventionsOptionsExtension copyFrom)
-            => _namingConvention = copyFrom._namingConvention;
+        {
+            _namingConvention = copyFrom._namingConvention;
+            _culture = copyFrom._culture;
+        }
 
         public virtual DbContextOptionsExtensionInfo Info => _info ??= new ExtensionInfo(this);
 
         protected virtual NamingConventionsOptionsExtension Clone() => new NamingConventionsOptionsExtension(this);
 
         internal virtual NamingConvention NamingConvention => _namingConvention;
+        internal virtual CultureInfo Culture => _culture;
 
         public virtual NamingConventionsOptionsExtension WithoutNaming()
         {
@@ -30,24 +34,27 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
-        public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention()
+        public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention(CultureInfo culture = null)
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.SnakeCase;
+            clone._culture = culture;
             return clone;
         }
 
-        public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention()
+        public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention(CultureInfo culture = null)
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.LowerCase;
+            clone._culture = culture;
             return clone;
         }
 
-        public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention()
+        public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention(CultureInfo culture = null)
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.UpperCase;
+            clone._culture = culture;
             return clone;
         }
 
