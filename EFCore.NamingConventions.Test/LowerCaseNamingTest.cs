@@ -27,7 +27,7 @@ namespace EFCore.NamingConventions.Test
         [Fact]
         public void Column_name_is_rewritten_in_turkish()
         {
-            using var context = CreateContext(CultureInfo.CreateSpecificCulture("tr_TR"));
+            using var context = CreateContext(CultureInfo.CreateSpecificCulture("tr-TR"));
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
             Assert.Equal("ıd", entityType.FindProperty("Id").GetColumnName());
             Assert.Equal("fullname", entityType.FindProperty("FullName").GetColumnName());
@@ -74,6 +74,7 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ix_simpleblog_fullname", entityType.GetIndexes().Single().GetName());
         }
 
-        TestContext CreateContext(CultureInfo culture = null) => new TestContext(builder => builder.UseLowerCaseNamingConvention(culture));
+        TestContext CreateContext(CultureInfo culture = null)
+            => new TestContext(builder => builder.UseLowerCaseNamingConvention(culture));
     }
 }
