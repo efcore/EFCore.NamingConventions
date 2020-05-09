@@ -14,9 +14,9 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         /// <summary>
         /// <para>
-        /// Adds the services required for proxy support in Entity Framework. You use this method when
-        /// using dependency injection in your application, such as with ASP.NET. For more information
-        /// on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
+        /// Adds the services required for applying naming conventions in Entity Framework Core.
+        /// You use this method when using dependency injection in your application, such as with ASP.NET.
+        /// For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
         /// </para>
         /// <para>
         /// You only need to use this functionality when you want Entity Framework to resolve the services it uses
