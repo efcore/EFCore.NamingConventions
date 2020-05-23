@@ -14,9 +14,15 @@ namespace EFCore.NamingConventions.Internal
     {
         public virtual void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
-            => entityTypeBuilder.ToTable(
-                RewriteName(entityTypeBuilder.Metadata.GetTableName()),
-                entityTypeBuilder.Metadata.GetSchema());
+        {
+            // Only touch root entities for now (TPH). Revisit for TPT/TPC.
+            if (entityTypeBuilder.Metadata.GetRootType() == entityTypeBuilder.Metadata)
+            {
+                entityTypeBuilder.ToTable(
+                    RewriteName(entityTypeBuilder.Metadata.GetTableName()),
+                    entityTypeBuilder.Metadata.GetSchema());
+            }
+        }
 
         public virtual void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder, IConventionContext<IConventionPropertyBuilder> context)
