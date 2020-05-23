@@ -7,7 +7,6 @@
     <VersionPrefix>1.1.0</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>
     <Description>Naming Conventions for Entity Framework Core Tables and Columns.</Description>
     <Authors>Shay Rojansky</Authors>
