@@ -40,9 +40,15 @@ SELECT c.id, c.full_name
         WHERE c.full_name = 'John Doe';
 ```
 
-Currently, only snake_case is supported, but we can add more conventions as people request them.
+## Supported naming conventions
 
-Some important notes:
+* UseSnakeCaseNamingConvention: `FullName` becomes `full_name`
+* UseLowerCaseNamingConvention: `FullName` becomes `fullname`
+* UseUpperCaseNamingConvention: `FullName` becomes `FULLNAME`
+
+Have another naming convention in mind? Open an issue or even submit a PR - it's pretty easy to do!
+
+## Important notes
 
 * If you have an existing database, adding this naming convention will cause a migration to produced, renaming everything. Be very cautious when doing this (the process currently involves dropping and recreating primary keys).
 * This plugin will work with any database provider and isn't related to PostgreSQL or Npgsql in any way.
