@@ -18,7 +18,8 @@ namespace EFCore.NamingConventions.Test
                 => modelBuilder.Entity<SimpleBlog>(e =>
                 {
                     e.HasIndex(b => b.FullName);
-                    e.OwnsOne(b => b.OwnedStatistics);
+                    e.OwnsOne(b => b.OwnedStatistics1);
+                    e.OwnsOne(b => b.OwnedStatistics2, s => s.ToTable("OwnedStatisticsSplit"));
                     e.HasAlternateKey(b => b.SomeAlternativeKey);
                 });
 
@@ -34,7 +35,8 @@ namespace EFCore.NamingConventions.Test
 
             public List<Post> Posts { get; set; }
 
-            public OwnedStatistics OwnedStatistics { get; set; }
+            public OwnedStatistics1 OwnedStatistics1 { get; set; }
+            public OwnedStatistics2 OwnedStatistics2 { get; set; }
         }
 
         public class Post
@@ -46,7 +48,12 @@ namespace EFCore.NamingConventions.Test
             public SimpleBlog Blog { get; set; }
         }
 
-        public class OwnedStatistics
+        public class OwnedStatistics1
+        {
+            public int SomeStatistic { get; set; }
+        }
+
+        public class OwnedStatistics2
         {
             public int SomeStatistic { get; set; }
         }

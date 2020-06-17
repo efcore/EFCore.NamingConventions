@@ -1,4 +1,6 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
@@ -15,12 +17,12 @@ namespace EFCore.NamingConventions.Internal
         public virtual void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
         {
+            var entityType = entityTypeBuilder.Metadata;
+
             // Only touch root entities for now (TPH). Revisit for TPT/TPC.
-            if (entityTypeBuilder.Metadata.GetRootType() == entityTypeBuilder.Metadata)
+            if (entityType.BaseType == null)
             {
-                entityTypeBuilder.ToTable(
-                    RewriteName(entityTypeBuilder.Metadata.GetTableName()),
-                    entityTypeBuilder.Metadata.GetSchema());
+                entityTypeBuilder.ToTable(RewriteName(entityType.GetTableName()), entityType.GetSchema());
             }
         }
 
@@ -31,10 +33,20 @@ namespace EFCore.NamingConventions.Internal
 
         public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
         {
-            if (relationshipBuilder.Metadata.IsOwnership)
+            var foreignKey = relationshipBuilder.Metadata;
+
+            if (foreignKey.IsOwnership)
             {
-                // Unset the table name which we've set when the entity type was added
-                relationshipBuilder.Metadata.DeclaringEntityType.SetTableName(null);
+                // Reset the table name which we've set when the entity type was added
+                // If table splitting was configured by explicitly setting the table name, the following
+                // does nothing.
+                foreignKey.DeclaringEntityType.SetTableName(foreignKey.DeclaringEntityType.GetDefaultTableName());
+
+                // Also need to reset all primary key properties
+                foreach (var keyProperty in foreignKey.DeclaringEntityType.FindPrimaryKey().Properties)
+                {
+                    keyProperty.SetColumnName(keyProperty.GetDefaultColumnName());
+                }
             }
         }
 

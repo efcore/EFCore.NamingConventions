@@ -43,11 +43,23 @@ namespace EFCore.NamingConventions.Test
         }
 
         [Fact]
-        public void Owned_entity_name_is_correct_when_configured()
+        public void Owned_entity_is_rewritten()
         {
             using var context = CreateContext();
-            var entityType = context.Model.FindEntityType(typeof(OwnedStatistics));
+            var entityType = context.Model.FindEntityType(typeof(OwnedStatistics1));
             Assert.Equal("simple_blog", entityType.GetTableName());
+            var property = entityType.GetProperty(nameof(OwnedStatistics1.SomeStatistic));
+            Assert.Equal("some_statistic", property.GetColumnName());
+        }
+
+        [Fact]
+        public void Owned_entity_split_is_rewritten()
+        {
+            using var context = CreateContext();
+            var entityType = context.Model.FindEntityType(typeof(OwnedStatistics2));
+            Assert.Equal("OwnedStatisticsSplit", entityType.GetTableName());
+            var property = entityType.GetProperty(nameof(OwnedStatistics2.SomeStatistic));
+            Assert.Equal("some_statistic", property.GetColumnName());
         }
 
         [Fact]
