@@ -1,13 +1,13 @@
 ﻿<Project>
   <ItemGroup>
-    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.1" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="3.1.1" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="3.1.1" />
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0-preview.3.20215.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="5.0.0-preview.5.20278.2 " />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="5.0.0-preview.5.20278.2 " />
 
     <!-- Test -->
     <PackageReference Update="xunit" Version="2.4.1" />
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.4.0" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="3.1.1" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.0-preview.5.20278.2 " />
   </ItemGroup>
 </Project>

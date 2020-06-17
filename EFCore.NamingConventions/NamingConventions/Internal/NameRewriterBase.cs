@@ -28,9 +28,8 @@ namespace EFCore.NamingConventions.Internal
             IConventionPropertyBuilder propertyBuilder, IConventionContext<IConventionPropertyBuilder> context)
             => propertyBuilder.HasColumnName(RewriteName(propertyBuilder.Metadata.GetColumnName()));
 
-        public void ProcessForeignKeyOwnershipChanged(
-            IConventionRelationshipBuilder relationshipBuilder,
-            IConventionContext<IConventionRelationshipBuilder> context)
+
+        public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
         {
             if (relationshipBuilder.Metadata.IsOwnership)
             {
@@ -39,13 +38,11 @@ namespace EFCore.NamingConventions.Internal
             }
         }
 
+        public void ProcessForeignKeyAdded(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<IConventionForeignKeyBuilder> context)
+            => relationshipBuilder.HasConstraintName(RewriteName(relationshipBuilder.Metadata.GetConstraintName()));
+
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
             => keyBuilder.HasName(RewriteName(keyBuilder.Metadata.GetName()));
-
-        public void ProcessForeignKeyAdded(
-            IConventionRelationshipBuilder relationshipBuilder,
-            IConventionContext<IConventionRelationshipBuilder> context)
-            => relationshipBuilder.HasConstraintName(RewriteName(relationshipBuilder.Metadata.GetConstraintName()));
 
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
