@@ -28,6 +28,7 @@ namespace EFCore.NamingConventions.Internal
             };
 
             conventionSet.EntityTypeAddedConventions.Add(nameRewriter);
+            conventionSet.EntityTypeAnnotationChangedConventions.Add(nameRewriter);
             conventionSet.PropertyAddedConventions.Add(nameRewriter);
             conventionSet.ForeignKeyOwnershipChangedConventions.Add(nameRewriter);
             conventionSet.KeyAddedConventions.Add(nameRewriter);

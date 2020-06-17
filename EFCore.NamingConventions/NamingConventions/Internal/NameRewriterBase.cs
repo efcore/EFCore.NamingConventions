@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -10,10 +11,12 @@ namespace EFCore.NamingConventions.Internal
     /// This class only required so we can have common superclass for all name rewriters
     /// </summary>
     internal abstract class NameRewriterBase :
-        IEntityTypeAddedConvention, IPropertyAddedConvention, IForeignKeyOwnershipChangedConvention,
-        IKeyAddedConvention, IForeignKeyAddedConvention,
+        IEntityTypeAddedConvention, IEntityTypeAnnotationChangedConvention, IPropertyAddedConvention,
+        IForeignKeyOwnershipChangedConvention, IKeyAddedConvention, IForeignKeyAddedConvention,
         IIndexAddedConvention
     {
+        protected abstract string RewriteName(string name);
+
         public virtual void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
         {
@@ -34,18 +37,62 @@ namespace EFCore.NamingConventions.Internal
         public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
         {
             var foreignKey = relationshipBuilder.Metadata;
+            var ownedEntityType = foreignKey.DeclaringEntityType;
 
-            if (foreignKey.IsOwnership)
+            if (foreignKey.IsOwnership &&
+                ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
             {
+                // An entity type is becoming owned - this is complicated.
+
                 // Reset the table name which we've set when the entity type was added
                 // If table splitting was configured by explicitly setting the table name, the following
                 // does nothing.
-                foreignKey.DeclaringEntityType.SetTableName(foreignKey.DeclaringEntityType.GetDefaultTableName());
+                ownedEntityType.SetTableName(ownedEntityType.GetDefaultTableName());
 
                 // Also need to reset all primary key properties
-                foreach (var keyProperty in foreignKey.DeclaringEntityType.FindPrimaryKey().Properties)
+                foreach (var keyProperty in ownedEntityType.FindPrimaryKey().Properties)
                 {
                     keyProperty.SetColumnName(keyProperty.GetDefaultColumnName());
+                }
+
+                // Finally, we need to apply the entity type prefix to all the owned properties, since
+                // the convention that normally does this (SharedTableConvention) runs at model finalization
+                // time, and will not overwrite our own rewritten column names.
+                foreach (var property in ownedEntityType.GetProperties()
+                    .Except(ownedEntityType.FindPrimaryKey().Properties)
+                    .Where(p => p.Builder.CanSetColumnName(null)))
+                {
+                    var columnName = property.GetColumnName();
+                    var prefix = RewriteName(ownedEntityType.ShortName());
+                    if (!columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        columnName = prefix + "_" + columnName;
+                    }
+
+                    // TODO: We should uniquify, but we don't know about all the entity types mapped
+                    // to this table. SharedTableConvention does its thing during model finalization,
+                    // so it has the full list of entities and can uniquify.
+                    // columnName = Uniquifier.Uniquify(columnName, properties, maxLength);
+                    property.Builder.HasColumnName(columnName);
+                }
+            }
+        }
+
+        public void ProcessEntityTypeAnnotationChanged(IConventionEntityTypeBuilder entityTypeBuilder, string name,
+            IConventionAnnotation annotation, IConventionAnnotation oldAnnotation, IConventionContext<IConventionAnnotation> context)
+        {
+            if (name == RelationalAnnotationNames.TableName &&
+                annotation?.GetConfigurationSource() == ConfigurationSource.Explicit &&
+                entityTypeBuilder.Metadata.FindOwnership() != null)
+            {
+                // An owned entity's table is being set explicitly - this is the trigger to do table
+                // splitting. When the entity became owned, we prefixed all of its properties - we
+                // must now undo that.
+                foreach (var property in entityTypeBuilder.Metadata.GetProperties()
+                    .Except(entityTypeBuilder.Metadata.FindPrimaryKey().Properties)
+                    .Where(p => p.Builder.CanSetColumnName(null)))
+                {
+                    property.Builder.HasColumnName(RewriteName(property.GetDefaultColumnName()));
                 }
             }
         }
@@ -60,7 +107,5 @@ namespace EFCore.NamingConventions.Internal
             IConventionIndexBuilder indexBuilder,
             IConventionContext<IConventionIndexBuilder> context)
             => indexBuilder.HasName(RewriteName(indexBuilder.Metadata.GetName()));
-
-        protected abstract string RewriteName(string name);
     }
 }

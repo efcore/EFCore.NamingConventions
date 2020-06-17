@@ -49,7 +49,7 @@ namespace EFCore.NamingConventions.Test
             var entityType = context.Model.FindEntityType(typeof(OwnedStatistics1));
             Assert.Equal("simple_blog", entityType.GetTableName());
             var property = entityType.GetProperty(nameof(OwnedStatistics1.SomeStatistic));
-            Assert.Equal("some_statistic", property.GetColumnName());
+            Assert.Equal("owned_statistics1_some_statistic", property.GetColumnName());
         }
 
         [Fact]
