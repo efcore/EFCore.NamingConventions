@@ -60,6 +60,14 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
+        public virtual NamingConventionsOptionsExtension WithUpperSnakeCaseNamingConvention(CultureInfo culture = null)
+        {
+            var clone = Clone();
+            clone._namingConvention = NamingConvention.UpperSnakeCase;
+            clone._culture = culture;
+            return clone;
+        }
+
         public void Validate(IDbContextOptions options) {}
 
         public void ApplyServices(IServiceCollection services)
@@ -89,6 +97,7 @@ namespace EFCore.NamingConventions.Internal
                             NamingConvention.SnakeCase => "using snake-case naming ",
                             NamingConvention.LowerCase => "using lower case naming",
                             NamingConvention.UpperCase => "using upper case naming",
+                            NamingConvention.UpperSnakeCase => "using upper snake-case namming",
                             _ => throw new NotImplementedException("Unhandled enum value: " +
                                                                    Extension._namingConvention)
                         });
