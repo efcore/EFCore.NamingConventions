@@ -6,6 +6,6 @@ namespace EFCore.NamingConventions.Internal
         SnakeCase,
         LowerCase,
         UpperCase,
-        UpperSnakeCase,
+        UpperSnakeCase
     }
 }
