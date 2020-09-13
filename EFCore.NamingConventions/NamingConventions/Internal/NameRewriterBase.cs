@@ -106,6 +106,6 @@ namespace EFCore.NamingConventions.Internal
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
             IConventionContext<IConventionIndexBuilder> context)
-            => indexBuilder.HasName(RewriteName(indexBuilder.Metadata.GetName()));
+            => indexBuilder.HasDatabaseName(RewriteName(indexBuilder.Metadata.GetDatabaseName()));
     }
 }

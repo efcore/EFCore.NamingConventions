@@ -71,7 +71,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("ix_simpleblog_fullname", entityType.GetIndexes().Single().GetName());
+            Assert.Equal("ix_simpleblog_fullname", entityType.GetIndexes().Single().GetDatabaseName());
         }
 
         TestContext CreateContext(CultureInfo culture = null)

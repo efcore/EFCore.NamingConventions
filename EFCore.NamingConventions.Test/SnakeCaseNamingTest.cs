@@ -91,7 +91,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetName());
+            Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetDatabaseName());
         }
 
         TestContext CreateContext(CultureInfo culture = null) => new TestContext(builder => builder.UseSnakeCaseNamingConvention(culture));
