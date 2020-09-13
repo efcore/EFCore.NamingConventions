@@ -19,22 +19,22 @@ namespace EFCore.NamingConventions.Internal
             var culture = extension.Culture;
             if (namingStyle == NamingConvention.None)
                 return conventionSet;
-            NameRewriterBase nameRewriter = namingStyle switch
+            var convention = new NameRewritingConvention(namingStyle switch
             {
                 NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 NamingConvention.LowerCase => new LowerCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 NamingConvention.UpperCase => new UpperCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 NamingConvention.UpperSnakeCase => new UpperSnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 _ => throw new NotImplementedException("Unhandled enum value: " + namingStyle)
-            };
+            });
 
-            conventionSet.EntityTypeAddedConventions.Add(nameRewriter);
-            conventionSet.EntityTypeAnnotationChangedConventions.Add(nameRewriter);
-            conventionSet.PropertyAddedConventions.Add(nameRewriter);
-            conventionSet.ForeignKeyOwnershipChangedConventions.Add(nameRewriter);
-            conventionSet.KeyAddedConventions.Add(nameRewriter);
-            conventionSet.ForeignKeyAddedConventions.Add(nameRewriter);
-            conventionSet.IndexAddedConventions.Add(nameRewriter);
+            conventionSet.EntityTypeAddedConventions.Add(convention);
+            conventionSet.EntityTypeAnnotationChangedConventions.Add(convention);
+            conventionSet.PropertyAddedConventions.Add(convention);
+            conventionSet.ForeignKeyOwnershipChangedConventions.Add(convention);
+            conventionSet.KeyAddedConventions.Add(convention);
+            conventionSet.ForeignKeyAddedConventions.Add(convention);
+            conventionSet.IndexAddedConventions.Add(convention);
 
             return conventionSet;
         }

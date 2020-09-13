@@ -4,13 +4,13 @@ using System.Text;
 
 namespace EFCore.NamingConventions.Internal
 {
-    class SnakeCaseNameRewriter : NameRewriterBase
+    public class SnakeCaseNameRewriter : INameRewriter
     {
-        private readonly CultureInfo _culture;
+        readonly CultureInfo _culture;
 
         public SnakeCaseNameRewriter(CultureInfo culture) => _culture = culture;
 
-        protected override string RewriteName(string name)
+        public virtual string RewriteName(string name)
         {
             if (string.IsNullOrEmpty(name))
                 return name;

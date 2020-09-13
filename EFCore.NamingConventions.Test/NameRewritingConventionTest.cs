@@ -1,11 +1,13 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace EFCore.NamingConventions.Test
 {
-    public class SnakeCaseNamingTest : RewriterTestBase
+    public class NameRewritingConventionTest
     {
         [Fact]
         public void Table_name_is_rewritten()
@@ -94,6 +96,62 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ix_simple_blog_full_name", entityType.GetIndexes().Single().GetDatabaseName());
         }
 
+        #region Support
+
         TestContext CreateContext(CultureInfo culture = null) => new TestContext(builder => builder.UseSnakeCaseNamingConvention(culture));
+
+        public class TestContext : DbContext
+        {
+            readonly Func<DbContextOptionsBuilder, DbContextOptionsBuilder> _useNamingConvention;
+            public TestContext(Func<DbContextOptionsBuilder, DbContextOptionsBuilder> useNamingConvention)
+                => _useNamingConvention = useNamingConvention;
+
+            public DbSet<SimpleBlog> Blog { get; set; }
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+                => modelBuilder.Entity<SimpleBlog>(e =>
+                {
+                    e.HasIndex(b => b.FullName);
+                    e.OwnsOne(b => b.OwnedStatistics1);
+                    e.OwnsOne(b => b.OwnedStatistics2, s => s.ToTable("OwnedStatisticsSplit"));
+                    e.HasAlternateKey(b => b.SomeAlternativeKey);
+                });
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+                => _useNamingConvention(optionsBuilder.UseInMemoryDatabase("test"));
+        }
+
+        public class SimpleBlog
+        {
+            public int Id { get; set; }
+            public string FullName { get; set; }
+            public int SomeAlternativeKey { get; set; }
+
+            public List<Post> Posts { get; set; }
+
+            public OwnedStatistics1 OwnedStatistics1 { get; set; }
+            public OwnedStatistics2 OwnedStatistics2 { get; set; }
+        }
+
+        public class Post
+        {
+            public int Id { get; set; }
+            public string FullName { get; set; }
+
+            public int BlogId { get; set; }
+            public SimpleBlog Blog { get; set; }
+        }
+
+        public class OwnedStatistics1
+        {
+            public int SomeStatistic { get; set; }
+        }
+
+        public class OwnedStatistics2
+        {
+            public int SomeStatistic { get; set; }
+        }
+
+        #endregion
     }
 }

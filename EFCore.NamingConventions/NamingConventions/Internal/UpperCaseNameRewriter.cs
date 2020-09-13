@@ -2,11 +2,11 @@ using System.Globalization;
 
 namespace EFCore.NamingConventions.Internal
 {
-    class UpperCaseNameRewriter : NameRewriterBase
+    public class UpperCaseNameRewriter : INameRewriter
     {
         readonly CultureInfo _culture;
 
         public UpperCaseNameRewriter(CultureInfo culture) => _culture = culture;
-        protected override string RewriteName(string name) => name.ToUpper(_culture);
+        public string RewriteName(string name) => name.ToUpper(_culture);
     }
 }

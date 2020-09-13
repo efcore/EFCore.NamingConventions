@@ -7,15 +7,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace EFCore.NamingConventions.Internal
 {
-    /// <summary>
-    /// This class only required so we can have common superclass for all name rewriters
-    /// </summary>
-    internal abstract class NameRewriterBase :
+    public class NameRewritingConvention :
         IEntityTypeAddedConvention, IEntityTypeAnnotationChangedConvention, IPropertyAddedConvention,
         IForeignKeyOwnershipChangedConvention, IKeyAddedConvention, IForeignKeyAddedConvention,
         IIndexAddedConvention
     {
-        protected abstract string RewriteName(string name);
+        readonly INameRewriter _namingNameRewriter;
+
+        public NameRewritingConvention(INameRewriter nameRewriter) => _namingNameRewriter = nameRewriter;
 
         public virtual void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
@@ -25,13 +24,13 @@ namespace EFCore.NamingConventions.Internal
             // Only touch root entities for now (TPH). Revisit for TPT/TPC.
             if (entityType.BaseType == null)
             {
-                entityTypeBuilder.ToTable(RewriteName(entityType.GetTableName()), entityType.GetSchema());
+                entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(entityType.GetTableName()), entityType.GetSchema());
             }
         }
 
         public virtual void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder, IConventionContext<IConventionPropertyBuilder> context)
-            => propertyBuilder.HasColumnName(RewriteName(propertyBuilder.Metadata.GetColumnName()));
+            => propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(propertyBuilder.Metadata.GetColumnName()));
 
 
         public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
@@ -63,7 +62,7 @@ namespace EFCore.NamingConventions.Internal
                     .Where(p => p.Builder.CanSetColumnName(null)))
                 {
                     var columnName = property.GetColumnName();
-                    var prefix = RewriteName(ownedEntityType.ShortName());
+                    var prefix = _namingNameRewriter.RewriteName(ownedEntityType.ShortName());
                     if (!columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     {
                         columnName = prefix + "_" + columnName;
@@ -92,20 +91,20 @@ namespace EFCore.NamingConventions.Internal
                     .Except(entityTypeBuilder.Metadata.FindPrimaryKey().Properties)
                     .Where(p => p.Builder.CanSetColumnName(null)))
                 {
-                    property.Builder.HasColumnName(RewriteName(property.GetDefaultColumnName()));
+                    property.Builder.HasColumnName(_namingNameRewriter.RewriteName(property.GetDefaultColumnName()));
                 }
             }
         }
 
         public void ProcessForeignKeyAdded(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<IConventionForeignKeyBuilder> context)
-            => relationshipBuilder.HasConstraintName(RewriteName(relationshipBuilder.Metadata.GetConstraintName()));
+            => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetConstraintName()));
 
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
-            => keyBuilder.HasName(RewriteName(keyBuilder.Metadata.GetName()));
+            => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetName()));
 
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
             IConventionContext<IConventionIndexBuilder> context)
-            => indexBuilder.HasDatabaseName(RewriteName(indexBuilder.Metadata.GetDatabaseName()));
+            => indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexBuilder.Metadata.GetDatabaseName()));
     }
 }

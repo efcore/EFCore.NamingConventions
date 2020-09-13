@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
+﻿using System.Globalization;
 
 namespace EFCore.NamingConventions.Internal
 {
-    class UpperSnakeCaseNameRewriter : SnakeCaseNameRewriter
+    public class UpperSnakeCaseNameRewriter : SnakeCaseNameRewriter
     {
-        private readonly CultureInfo _culture;
+        readonly CultureInfo _culture;
 
         public UpperSnakeCaseNameRewriter(CultureInfo culture) : base(culture) => _culture = culture;
 
-        protected override string RewriteName(string name) => base.RewriteName(name).ToUpper(_culture);
+        public override string RewriteName(string name) => base.RewriteName(name).ToUpper(_culture);
     }
 }
