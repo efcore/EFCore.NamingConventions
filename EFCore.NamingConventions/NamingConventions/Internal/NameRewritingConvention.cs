@@ -12,7 +12,7 @@ namespace EFCore.NamingConventions.Internal
         IForeignKeyOwnershipChangedConvention, IKeyAddedConvention, IForeignKeyAddedConvention,
         IIndexAddedConvention
     {
-        readonly INameRewriter _namingNameRewriter;
+        private readonly INameRewriter _namingNameRewriter;
 
         public NameRewritingConvention(INameRewriter nameRewriter) => _namingNameRewriter = nameRewriter;
 

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+// ReSharper disable UnusedMember.Global
 
 namespace EFCore.NamingConventions.Test
 {
@@ -22,7 +24,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext();
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
+            Assert.Equal("id_with_special_name", entityType.FindProperty("IdWithSpecialName").GetColumnName());
             Assert.Equal("full_name", entityType.FindProperty("FullName").GetColumnName());
         }
 
@@ -31,7 +33,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext(CultureInfo.CreateSpecificCulture("tr-TR"));
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("ıd", entityType.FindProperty("Id").GetColumnName());
+            Assert.Equal("ıd_with_special_name", entityType.FindProperty("IdWithSpecialName").GetColumnName());
             Assert.Equal("full_name", entityType.FindProperty("FullName").GetColumnName());
         }
 
@@ -40,7 +42,7 @@ namespace EFCore.NamingConventions.Test
         {
             using var context = CreateContext(CultureInfo.InvariantCulture);
             var entityType = context.Model.FindEntityType(typeof(SimpleBlog));
-            Assert.Equal("id", entityType.FindProperty("Id").GetColumnName());
+            Assert.Equal("id_with_special_name", entityType.FindProperty("IdWithSpecialName").GetColumnName());
             Assert.Equal("full_name", entityType.FindProperty("FullName").GetColumnName());
         }
 
@@ -102,11 +104,9 @@ namespace EFCore.NamingConventions.Test
 
         public class TestContext : DbContext
         {
-            readonly Func<DbContextOptionsBuilder, DbContextOptionsBuilder> _useNamingConvention;
+            private readonly Func<DbContextOptionsBuilder, DbContextOptionsBuilder> _useNamingConvention;
             public TestContext(Func<DbContextOptionsBuilder, DbContextOptionsBuilder> useNamingConvention)
                 => _useNamingConvention = useNamingConvention;
-
-            public DbSet<SimpleBlog> Blog { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
                 => modelBuilder.Entity<SimpleBlog>(e =>
@@ -123,7 +123,8 @@ namespace EFCore.NamingConventions.Test
 
         public class SimpleBlog
         {
-            public int Id { get; set; }
+            [Key]
+            public int IdWithSpecialName { get; set; }
             public string FullName { get; set; }
             public int SomeAlternativeKey { get; set; }
 

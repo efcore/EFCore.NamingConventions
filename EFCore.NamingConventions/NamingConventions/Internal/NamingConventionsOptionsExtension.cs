@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using JetBrains.Annotations;
@@ -11,9 +10,9 @@ namespace EFCore.NamingConventions.Internal
 {
     public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     {
-        DbContextOptionsExtensionInfo _info;
-        NamingConvention _namingConvention;
-        CultureInfo _culture;
+        private DbContextOptionsExtensionInfo _info;
+        private NamingConvention _namingConvention;
+        private CultureInfo _culture;
 
         public NamingConventionsOptionsExtension() {}
         protected NamingConventionsOptionsExtension([NotNull] NamingConventionsOptionsExtension copyFrom)
@@ -73,13 +72,13 @@ namespace EFCore.NamingConventions.Internal
         public void ApplyServices(IServiceCollection services)
             => services.AddEntityFrameworkNamingConventions();
 
-        sealed class ExtensionInfo : DbContextOptionsExtensionInfo
+        private sealed class ExtensionInfo : DbContextOptionsExtensionInfo
         {
-            string _logFragment;
+            private string _logFragment;
 
             public ExtensionInfo(IDbContextOptionsExtension extension) : base(extension) {}
 
-            new NamingConventionsOptionsExtension Extension
+            private new NamingConventionsOptionsExtension Extension
                 => (NamingConventionsOptionsExtension)base.Extension;
 
             public override bool IsDatabaseProvider => false;
@@ -97,9 +96,8 @@ namespace EFCore.NamingConventions.Internal
                             NamingConvention.SnakeCase => "using snake-case naming ",
                             NamingConvention.LowerCase => "using lower case naming",
                             NamingConvention.UpperCase => "using upper case naming",
-                            NamingConvention.UpperSnakeCase => "using upper snake-case namming",
-                            _ => throw new NotImplementedException("Unhandled enum value: " +
-                                                                   Extension._namingConvention)
+                            NamingConvention.UpperSnakeCase => "using upper snake-case naming",
+                            _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + Extension._namingConvention)
                         });
 
                         if (Extension._culture is null)

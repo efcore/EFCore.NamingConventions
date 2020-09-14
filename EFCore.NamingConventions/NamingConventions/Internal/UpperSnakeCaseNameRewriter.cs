@@ -4,7 +4,7 @@ namespace EFCore.NamingConventions.Internal
 {
     public class UpperSnakeCaseNameRewriter : SnakeCaseNameRewriter
     {
-        readonly CultureInfo _culture;
+        private readonly CultureInfo _culture;
 
         public UpperSnakeCaseNameRewriter(CultureInfo culture) : base(culture) => _culture = culture;
 

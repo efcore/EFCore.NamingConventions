@@ -1,6 +1,6 @@
 namespace EFCore.NamingConventions.Internal
 {
-    enum NamingConvention
+    public enum NamingConvention
     {
         None,
         SnakeCase,

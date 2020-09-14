@@ -6,14 +6,16 @@ namespace EFCore.NamingConventions.Internal
 {
     public class SnakeCaseNameRewriter : INameRewriter
     {
-        readonly CultureInfo _culture;
+        private readonly CultureInfo _culture;
 
         public SnakeCaseNameRewriter(CultureInfo culture) => _culture = culture;
 
         public virtual string RewriteName(string name)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 return name;
+            }
 
             var builder = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
             var previousCategory = default(UnicodeCategory?);
@@ -50,12 +52,16 @@ namespace EFCore.NamingConventions.Internal
                 case UnicodeCategory.LowercaseLetter:
                 case UnicodeCategory.DecimalDigitNumber:
                     if (previousCategory == UnicodeCategory.SpaceSeparator)
+                    {
                         builder.Append('_');
+                    }
                     break;
 
                 default:
                     if (previousCategory != null)
+                    {
                         previousCategory = UnicodeCategory.SpaceSeparator;
+                    }
                     continue;
                 }
 
