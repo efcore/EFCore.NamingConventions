@@ -8,6 +8,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <Description>Naming Conventions for Entity Framework Core Tables and Columns.</Description>
     <Authors>Shay Rojansky</Authors>
     <Copyright>Copyright 2020 © Shay Rojansky</Copyright>
