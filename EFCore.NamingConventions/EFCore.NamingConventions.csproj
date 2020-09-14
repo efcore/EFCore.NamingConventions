@@ -11,7 +11,7 @@
     <Description>Naming Conventions for Entity Framework Core Tables and Columns.</Description>
     <Authors>Shay Rojansky</Authors>
     <Copyright>Copyright 2020 © Shay Rojansky</Copyright>
-    <PackageTags>Entity Framework Core;entity-framework-core;ef;efcore;orm;sql;postgresql;npgsql</PackageTags>
+    <PackageTags>Entity Framework Core;entity-framework-core;ef;efcore;orm;sql</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/efcore/EFCore.NamingConventions</RepositoryUrl>
