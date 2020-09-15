@@ -22,7 +22,7 @@ namespace Microsoft.EntityFrameworkCore
 
         public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
+            => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
         public static DbContextOptionsBuilder UseLowerCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
@@ -38,7 +38,7 @@ namespace Microsoft.EntityFrameworkCore
 
         public static DbContextOptionsBuilder<TContext> UseLowerCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
+            => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder ,culture);
 
         public static DbContextOptionsBuilder UseUpperCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
@@ -54,7 +54,7 @@ namespace Microsoft.EntityFrameworkCore
 
         public static DbContextOptionsBuilder<TContext> UseUpperCaseNamingConvention<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder,culture);
+            => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
         public static DbContextOptionsBuilder UseUpperSnakeCaseNamingConvention([NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
