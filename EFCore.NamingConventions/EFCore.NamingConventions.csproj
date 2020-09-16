@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>EFCore.NamingConventions</AssemblyName>
-    <RootNamespace>EFCore</RootNamespace>
     <TargetFramework>netstandard2.1</TargetFramework>
     <VersionPrefix>5.0.0-rc1</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
