@@ -38,6 +38,7 @@ namespace EFCore.NamingConventions.Internal
             conventionSet.KeyAddedConventions.Add(convention);
             conventionSet.ForeignKeyAddedConventions.Add(convention);
             conventionSet.IndexAddedConventions.Add(convention);
+            conventionSet.EntityTypeBaseTypeChangedConventions.Add(convention);
 
             return conventionSet;
         }
