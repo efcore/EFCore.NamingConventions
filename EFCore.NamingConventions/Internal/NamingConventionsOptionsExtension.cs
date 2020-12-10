@@ -23,7 +23,7 @@ namespace EFCore.NamingConventions.Internal
 
         public virtual DbContextOptionsExtensionInfo Info => _info ??= new ExtensionInfo(this);
 
-        protected virtual NamingConventionsOptionsExtension Clone() => new NamingConventionsOptionsExtension(this);
+        protected virtual NamingConventionsOptionsExtension Clone() => new(this);
 
         internal virtual NamingConvention NamingConvention => _namingConvention;
         internal virtual CultureInfo Culture => _culture;
