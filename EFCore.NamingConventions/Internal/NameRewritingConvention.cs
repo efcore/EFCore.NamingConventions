@@ -31,6 +31,11 @@ namespace EFCore.NamingConventions.Internal
             if (entityType.BaseType is null)
             {
                 entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(entityType.GetTableName()), entityType.GetSchema());
+
+                if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention)
+                {
+                    entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(entityType.GetViewName()), entityType.GetViewSchema());
+                }
             }
         }
 
@@ -128,16 +133,22 @@ namespace EFCore.NamingConventions.Internal
                     .Where(p => p.Builder.CanSetColumnName(null)))
                 {
                     var columnName = property.GetColumnBaseName();
-                    var prefix = _namingNameRewriter.RewriteName(ownedEntityType.ShortName());
-                    if (!columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    var prefix = ownedEntityType.ShortName() + '_';
+
+                    if (columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     {
-                        columnName = prefix + "_" + columnName;
+                        columnName = columnName[prefix.Length..];
+                    }
+
+                    var rewrittenPrefix = _namingNameRewriter.RewriteName(prefix);
+                    if (!columnName.StartsWith(rewrittenPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        columnName = rewrittenPrefix + columnName;
                     }
 
                     // TODO: We should uniquify, but we don't know about all the entity types mapped
                     // to this table. SharedTableConvention does its thing during model finalization,
                     // so it has the full list of entities and can uniquify.
-                    // columnName = Uniquifier.Uniquify(columnName, properties, maxLength);
                     property.Builder.HasColumnName(columnName);
                 }
             }
