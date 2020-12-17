@@ -133,6 +133,54 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ix_simple_blog_indexed_property", entityType.GetIndexes().Single().GetDatabaseName());
         }
 
+        [Fact]
+        public void Table_splitting()
+        {
+            var model = BuildModel(b =>
+            {
+                b.Entity("One", e =>
+                {
+                    e.ToTable("table");
+                    e.Property<int>("Id");
+                    e.Property<int>("OneProp");
+                    e.Property<int>("Common");
+
+                    e.HasOne("Two").WithOne().HasForeignKey("Two", "Id");
+                });
+
+                b.Entity("Two", e =>
+                {
+                    e.ToTable("table");
+                    e.Property<int>("Id");
+                    e.Property<int>("TwoProp");
+                    e.Property<int>("Common");
+                });
+            });
+
+            var oneEntityType = model.FindEntityType("One");
+            var twoEntityType = model.FindEntityType("Two");
+
+            var table = StoreObjectIdentifier.Create(oneEntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(twoEntityType, StoreObjectType.Table));
+
+            Assert.Equal("table", oneEntityType.GetTableName());
+            Assert.Equal("one_prop", oneEntityType.FindProperty("OneProp").GetColumnName(table));
+
+            Assert.Equal("table", twoEntityType.GetTableName());
+            Assert.Equal("two_prop", twoEntityType.FindProperty("TwoProp").GetColumnName(table));
+
+            var foreignKey = twoEntityType.GetForeignKeys().Single();
+            Assert.Same(oneEntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
+            Assert.Same(twoEntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
+            Assert.Equal(oneEntityType.FindPrimaryKey().GetName(), twoEntityType.FindPrimaryKey().GetName());
+
+            Assert.Equal(
+                foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
+                foreignKey.Properties.Single().GetColumnName(table));
+
+            Assert.Empty(oneEntityType.GetForeignKeys());
+        }
+
         #region Owned entities
 
         [Fact]
