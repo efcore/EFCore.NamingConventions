@@ -12,7 +12,7 @@ namespace EFCore.NamingConventions.Internal
     public class NameRewritingConvention :
         IEntityTypeAddedConvention, IEntityTypeAnnotationChangedConvention, IPropertyAddedConvention,
         IForeignKeyOwnershipChangedConvention, IKeyAddedConvention, IForeignKeyAddedConvention,
-        IIndexAddedConvention, IEntityTypeBaseTypeChangedConvention
+        IIndexAddedConvention, IEntityTypeBaseTypeChangedConvention, IModelFinalizingConvention
     {
         private static readonly StoreObjectType[] _storeObjectTypes
             = { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery};
@@ -70,7 +70,7 @@ namespace EFCore.NamingConventions.Internal
             var entityType = propertyBuilder.Metadata.DeclaringEntityType;
             var property = propertyBuilder.Metadata;
 
-            property.SetColumnName(_namingNameRewriter.RewriteName(property.GetColumnBaseName()));
+            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(property.GetColumnBaseName()));
 
             foreach (var storeObjectType in _storeObjectTypes)
             {
@@ -80,7 +80,7 @@ namespace EFCore.NamingConventions.Internal
 
                 if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
                 {
-                    property.SetColumnName(
+                    propertyBuilder.HasColumnName(
                         _namingNameRewriter.RewriteName(property.GetColumnName(identifier.Value)), identifier.Value);
                 }
             }
@@ -124,41 +124,34 @@ namespace EFCore.NamingConventions.Internal
                         }
                     }
                 }
-
-                // Finally, we need to apply the entity type prefix to all the owned properties, since
-                // the convention that normally does this (SharedTableConvention) runs at model finalization
-                // time, and will not overwrite our own rewritten column names.
-                foreach (var property in ownedEntityType.GetProperties()
-                    .Except(ownedEntityType.FindPrimaryKey().Properties)
-                    .Where(p => p.Builder.CanSetColumnName(null)))
-                {
-                    var columnName = property.GetColumnBaseName();
-                    var prefix = ownedEntityType.ShortName() + '_';
-
-                    if (columnName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        columnName = columnName[prefix.Length..];
-                    }
-
-                    var rewrittenPrefix = _namingNameRewriter.RewriteName(prefix);
-                    if (!columnName.StartsWith(rewrittenPrefix, StringComparison.OrdinalIgnoreCase))
-                    {
-                        columnName = rewrittenPrefix + columnName;
-                    }
-
-                    // TODO: We should uniquify, but we don't know about all the entity types mapped
-                    // to this table. SharedTableConvention does its thing during model finalization,
-                    // so it has the full list of entities and can uniquify.
-                    property.Builder.HasColumnName(columnName);
-                }
             }
         }
 
         public void ProcessEntityTypeAnnotationChanged(IConventionEntityTypeBuilder entityTypeBuilder, string name,
             IConventionAnnotation annotation, IConventionAnnotation oldAnnotation, IConventionContext<IConventionAnnotation> context)
         {
-            if (name == RelationalAnnotationNames.TableName &&
-                oldAnnotation?.Value is null &&
+            if (name != RelationalAnnotationNames.TableName)
+            {
+                return;
+            }
+
+            // The table's name is changing - rewrite keys, index names
+            if (entityTypeBuilder.Metadata.FindPrimaryKey() is IConventionKey primaryKey)
+            {
+                primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
+            }
+
+            foreach (var foreignKey in entityTypeBuilder.Metadata.GetForeignKeys())
+            {
+                foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKey.GetDefaultName()));
+            }
+
+            foreach (var index in entityTypeBuilder.Metadata.GetIndexes())
+            {
+                index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(index.GetDefaultDatabaseName()));
+            }
+
+            if (oldAnnotation?.Value is null &&
                 annotation?.Value is not null &&
                 entityTypeBuilder.Metadata.FindOwnership() is IConventionForeignKey ownership &&
                 (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
@@ -183,14 +176,53 @@ namespace EFCore.NamingConventions.Internal
         }
 
         public void ProcessForeignKeyAdded(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<IConventionForeignKeyBuilder> context)
-            => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetConstraintName()));
+            => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
 
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
-            => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetName()));
+            => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetDefaultName()));
 
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
             IConventionContext<IConventionIndexBuilder> context)
-            => indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexBuilder.Metadata.GetDatabaseName()));
+            => indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexBuilder.Metadata.GetDefaultDatabaseName()));
+
+        /// <summary>
+        /// EF Core's <see cref="SharedTableConvention" /> runs at model finalization time, and adds entity type prefixes to
+        /// clashing columns. These prefixes also needs to be rewritten by us, so we run after that convention to do that.
+        /// </summary>
+        public void ProcessModelFinalizing(IConventionModelBuilder modelBuilder, IConventionContext<IConventionModelBuilder> context)
+        {
+            foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    var columnName = property.GetColumnBaseName();
+                    if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
+                    {
+                        property.Builder.HasColumnName(
+                            _namingNameRewriter.RewriteName(entityType.ShortName()) +
+                            columnName.Substring(entityType.ShortName().Length));
+                    }
+
+                    foreach (var storeObjectType in _storeObjectTypes)
+                    {
+                        var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
+                        if (identifier is null)
+                            continue;
+
+                        if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
+                        {
+                            columnName = property.GetColumnName(identifier.Value);
+                            if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
+                            {
+                                property.Builder.HasColumnName(
+                                    _namingNameRewriter.RewriteName(entityType.ShortName()) +
+                                    columnName.Substring(entityType.ShortName().Length));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
