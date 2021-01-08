@@ -1,283 +1,131 @@
-﻿using System;
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using EFCore.NamingConventions.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Xunit;
-// ReSharper disable UnusedMember.Global
 
 namespace EFCore.NamingConventions.Test
 {
     public class NameRewritingConventionTest
     {
         [Fact]
-        public void Table_name()
+        public void Table()
         {
-            var entityType = BuildEntityType("SimpleBlog", _ => {});
-            Assert.Equal("simple_blog", entityType.GetTableName());
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
+            Assert.Equal("sample_entity", entityType.GetTableName());
         }
 
         [Fact]
-        public void Column_name()
+        public void Column()
         {
-            var entityType = BuildEntityType("SimpleBlog", e => e.Property<int>("SimpleBlogId"));
-
-            Assert.Equal("simple_blog_id", entityType.FindProperty("SimpleBlogId")
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
+            Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
                 .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
         }
 
         [Fact]
-        public void Column_name_on_view()
+        public void Column_with_turkish_culture()
         {
-            var entityType = BuildEntityType("SimpleBlog", e =>
-            {
-                e.ToTable("SimpleBlogTable");
-                e.ToView("SimpleBlogView");
-                e.ToFunction("SimpleBlogFunction");
-                e.Property<int>("SimpleBlogId");
-            });
+            var entityType = BuildEntityType(
+                b => b.Entity<SampleEntity>(),
+                CultureInfo.CreateSpecificCulture("tr-TR"));
+            Assert.Equal("sample_entity_ıd", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        }
+
+        [Fact]
+        public void Column_with_invariant_culture()
+        {
+            var entityType = BuildEntityType(
+                b => b.Entity<SampleEntity>(),
+                CultureInfo.InvariantCulture);
+            Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        }
+
+        [Fact]
+        public void Column_on_view()
+        {
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>(
+                e =>
+                {
+                    e.ToTable("SimpleBlogTable");
+                    e.ToView("SimpleBlogView");
+                    e.ToFunction("SimpleBlogFunction");
+                }));
 
             foreach (var type in new[] { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function })
             {
-                Assert.Equal("simple_blog_id", entityType.FindProperty("SimpleBlogId")
+                Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
                     .GetColumnName(StoreObjectIdentifier.Create(entityType, type)!.Value));
             }
         }
 
         [Fact]
-        public void Column_name_turkish_culture()
+        public void Primary_key()
+        {
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
+            Assert.Equal("pk_sample_entity", entityType.GetKeys().Single(k => k.IsPrimaryKey()).GetName());
+        }
+
+        [Fact]
+        public void Alternative_key()
         {
             var entityType = BuildEntityType(
-                "SimpleBlog",
-                e => e.Property<int>("SimpleBlogId"),
-                CultureInfo.CreateSpecificCulture("tr-TR"));
-
-            Assert.Equal("simple_blog_ıd", entityType.FindProperty("SimpleBlogId")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+                b => b.Entity<SampleEntity>(
+                    e =>
+                    {
+                        e.Property<int>("SomeAlternateKey");
+                        e.HasAlternateKey("SomeAlternateKey");
+                    }));
+            Assert.Equal("ak_sample_entity_some_alternate_key", entityType.GetKeys().Single(k => !k.IsPrimaryKey()).GetName());
         }
 
         [Fact]
-        public void Column_name_invariant_culture()
+        public void Foreign_key()
         {
-            var entityType = BuildEntityType(
-                "SimpleBlog",
-                e => e.Property<int>("SimpleBlogId"),
-                CultureInfo.InvariantCulture);
-
-            Assert.Equal("simple_blog_id", entityType.FindProperty("SimpleBlogId")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
-        }
-
-        [Fact]
-        public void Primary_key_name()
-        {
-            var entityType = BuildEntityType("SimpleBlog", e =>
-            {
-                e.Property<int>("SimpleBlogId");
-                e.HasKey("SimpleBlogId");
-            });
-
-            Assert.Equal("pk_simple_blog", entityType.GetKeys().Single(k => k.IsPrimaryKey()).GetName());
-        }
-
-        [Fact]
-        public void Alternative_key_name()
-        {
-            var entityType = BuildEntityType("SimpleBlog", e =>
-            {
-                e.Property<int>("SimpleBlogId");
-                e.Property<int>("SomeAlternativeKey");
-                e.HasKey("SimpleBlogId");
-                e.HasAlternateKey("SomeAlternativeKey");
-            });
-
-            Assert.Equal("ak_simple_blog_some_alternative_key", entityType.GetKeys().Single(k => !k.IsPrimaryKey()).GetName());
-        }
-
-        [Fact]
-        public void Foreign_key_name()
-        {
-            var model = BuildModel(b =>
-            {
-                b.Entity("Blog", e =>
-                {
-                    e.Property<int>("BlogId");
-                    e.HasKey("BlogId");
-                    e.HasMany("Post").WithOne("Blog");
-                });
-                b.Entity("Post", e =>
-                {
-                    e.Property<int>("PostId");
-                    e.Property<int>("BlogId");
-                    e.HasKey("PostId");
-                });
-            });
-            var entityType = model.FindEntityType("Post");
-
+            var model = BuildModel(b => b.Entity<Blog>());
+            var entityType = model.FindEntityType(typeof(Post));
             Assert.Equal("fk_post_blog_blog_id", entityType.GetForeignKeys().Single().GetConstraintName());
         }
 
         [Fact]
-        public void Index_name()
+        public void Index()
         {
-            var entityType = BuildEntityType("SimpleBlog", e =>
-            {
-                e.Property<int>("IndexedProperty");
-                e.HasIndex("IndexedProperty");
-            });
-
-            Assert.Equal("ix_simple_blog_indexed_property", entityType.GetIndexes().Single().GetDatabaseName());
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>().HasIndex(s => s.SomeProperty));
+            Assert.Equal("ix_sample_entity_some_property", entityType.GetIndexes().Single().GetDatabaseName());
         }
-
-        [Fact]
-        public void Table_splitting()
-        {
-            var model = BuildModel(b =>
-            {
-                b.Entity("One", e =>
-                {
-                    e.ToTable("table");
-                    e.Property<int>("Id");
-                    e.Property<int>("OneProp");
-                    e.Property<int>("Common");
-
-                    e.HasOne("Two").WithOne().HasForeignKey("Two", "Id");
-                });
-
-                b.Entity("Two", e =>
-                {
-                    e.ToTable("table");
-                    e.Property<int>("Id");
-                    e.Property<int>("TwoProp");
-                    e.Property<int>("Common");
-                });
-            });
-
-            var oneEntityType = model.FindEntityType("One");
-            var twoEntityType = model.FindEntityType("Two");
-
-            var table = StoreObjectIdentifier.Create(oneEntityType, StoreObjectType.Table)!.Value;
-            Assert.Equal(table, StoreObjectIdentifier.Create(twoEntityType, StoreObjectType.Table));
-
-            Assert.Equal("table", oneEntityType.GetTableName());
-            Assert.Equal("one_prop", oneEntityType.FindProperty("OneProp").GetColumnName(table));
-
-            Assert.Equal("table", twoEntityType.GetTableName());
-            Assert.Equal("two_prop", twoEntityType.FindProperty("TwoProp").GetColumnName(table));
-
-            var foreignKey = twoEntityType.GetForeignKeys().Single();
-            Assert.Same(oneEntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
-            Assert.Same(twoEntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
-            Assert.Equal(oneEntityType.FindPrimaryKey().GetName(), twoEntityType.FindPrimaryKey().GetName());
-
-            Assert.Equal(
-                foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
-                foreignKey.Properties.Single().GetColumnName(table));
-
-            Assert.Empty(oneEntityType.GetForeignKeys());
-        }
-
-        #region Owned entities
-
-        [Fact]
-        public void Owned_entity_with_table_splitting()
-        {
-            var model = BuildModel(b =>
-            {
-                b.Entity("SimpleBlog", e =>
-                {
-                    e.OwnsOne("OwnedEntity", "Nav", o => o.Property<int>("OwnedProperty"));
-                });
-            });
-
-            var entityType = model.FindEntityType("OwnedEntity");
-            Assert.Equal("pk_simple_blog", entityType.FindPrimaryKey().GetName());
-            Assert.Equal("simple_blog", entityType.GetTableName());
-            Assert.Equal("owned_property", entityType.FindProperty("OwnedProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
-        }
-
-        [Fact]
-        public void Owned_entity_without_table_splitting()
-        {
-            var model = BuildModel(b =>
-            {
-                b.Entity("SimpleBlog", e =>
-                {
-                    e.Property<int>("SimpleBlogId");
-                    e.HasKey("SimpleBlogId");
-                    e.OwnsOne("OwnedEntity", "Nav", o =>
-                    {
-                        o.ToTable("another_table");
-                        o.Property<int>("OwnedProperty");
-                    });
-                });
-            });
-            var entityType = model.FindEntityType("OwnedEntity");
-
-            Assert.Equal("pk_another_table", entityType.FindPrimaryKey().GetName());
-            Assert.Equal("another_table", entityType.GetTableName());
-            Assert.Equal("owned_property", entityType.FindProperty("OwnedProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
-        }
-
-        [Fact]
-        public void Owned_entity_with_view_without_table_splitting()
-        {
-            var model = BuildModel(b =>
-            {
-                b.Entity("OwnedEntity", e =>
-                {
-                    e.ToTable("OwnedEntityTable");
-                    e.ToView("OwnedEntityView");
-                    e.Property<int>("OwnedProperty");
-                });
-                b.Entity("SimpleBlog", e => e.OwnsOne("OwnedEntity", "Nav"));
-            });
-            var entityType = model.FindEntityType("OwnedEntity");
-
-            Assert.Equal("OwnedEntityTable", entityType.GetTableName());
-            Assert.Equal("OwnedEntityView", entityType.GetViewName());
-            Assert.Equal("owned_property", entityType.FindProperty("OwnedProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
-            Assert.Equal("owned_property", entityType.FindProperty("OwnedProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.View)!.Value));
-        }
-
-        #endregion Owned entities
-
-        #region Inheritance
 
         [Fact]
         public void TPH()
         {
             var model = BuildModel(b =>
             {
-                b.Entity("SimpleBlog", e =>
-                {
-                    e.Property<int>("SimpleBlogId");
-                    e.HasKey("SimpleBlogId");
-                });
-                b.Entity("FancyBlog", e =>
-                {
-                    e.HasBaseType("SimpleBlog");
-                    e.Property<int>("FancyProperty");
-                });
+                b.Entity<Parent>();
+                b.Entity<Child>();
             });
 
-            var simpleBlogEntityType = model.FindEntityType("SimpleBlog");
-            Assert.Equal("simple_blog", simpleBlogEntityType.GetTableName());
-            Assert.Equal("simple_blog_id", simpleBlogEntityType.FindProperty("SimpleBlogId")
-                .GetColumnName(StoreObjectIdentifier.Create(simpleBlogEntityType, StoreObjectType.Table)!.Value));
+            var parentEntityType = model.FindEntityType(typeof(Parent));
+            var childEntityType = model.FindEntityType(typeof(Child));
 
-            var fancyBlogEntityType = model.FindEntityType("FancyBlog");
-            Assert.Equal("simple_blog", fancyBlogEntityType.GetTableName());
-            Assert.Equal("fancy_property", fancyBlogEntityType.FindProperty("FancyProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(fancyBlogEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent", parentEntityType.GetTableName());
+            Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Equal("parent", childEntityType.GetTableName());
+            Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
         }
 
         [Fact]
@@ -285,51 +133,182 @@ namespace EFCore.NamingConventions.Test
         {
             var model = BuildModel(b =>
             {
-                b.Entity("SimpleBlog", e =>
-                {
-                    e.Property<int>("SimpleBlogId");
-                    e.HasKey("SimpleBlogId");
-                });
-                b.Entity("FancyBlog", e =>
-                {
-                    e.HasBaseType("SimpleBlog");
-                    e.ToTable("fancy_blog");
-                    e.Property<int>("FancyProperty");
-                });
+                b.Entity<Parent>().ToTable("parent");
+                b.Entity<Child>().ToTable("child");
             });
 
-            var simpleBlogEntityType = model.FindEntityType("SimpleBlog");
-            Assert.Equal("simple_blog", simpleBlogEntityType.GetTableName());
-            Assert.Equal("simple_blog_id", simpleBlogEntityType.FindProperty("SimpleBlogId")
-                .GetColumnName(StoreObjectIdentifier.Create(simpleBlogEntityType, StoreObjectType.Table)!.Value));
+            var parentEntityType = model.FindEntityType(typeof(Parent));
+            var childEntityType = model.FindEntityType(typeof(Child));
 
-            var fancyBlogEntityType = model.FindEntityType("FancyBlog");
-            Assert.Equal("fancy_blog", fancyBlogEntityType.GetTableName());
-            Assert.Equal("fancy_property", fancyBlogEntityType.FindProperty("FancyProperty")
-                .GetColumnName(StoreObjectIdentifier.Create(fancyBlogEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent", parentEntityType.GetTableName());
+            Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Equal("child", childEntityType.GetTableName());
+            Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            var parentKey = parentEntityType.FindPrimaryKey();
+            var childKey = childEntityType.FindPrimaryKey();
+
+            Assert.Equal("PK_parent", parentKey.GetName());
+            Assert.Equal("PK_parent", childKey.GetName());
         }
 
-        #endregion Inheritance
-
-        #region Support
-
-        private IModel BuildModel(Action<ModelBuilder> buildAction, CultureInfo cultureInfo = null)
+        [Fact]
+        public void Table_splitting()
         {
-            var conventionSet = InMemoryTestHelpers.Instance.CreateConventionSetBuilder().CreateConventionSet();
-            ConventionSet.Remove(conventionSet.ModelFinalizedConventions, typeof(ValidatingConvention));
+            var model = BuildModel(b =>
+            {
+                b.Entity<Split1>(
+                    e =>
+                    {
+                        e.ToTable("split_table");
+                        e.HasOne(s1 => s1.S2).WithOne(s2 => s2.S1).HasForeignKey<Split2>(s2 => s2.Id);
+                    });
+
+                b.Entity<Split2>(e => e.ToTable("split_table"));
+            });
+
+            var split1EntityType = model.FindEntityType(typeof(Split1));
+            var split2EntityType = model.FindEntityType(typeof(Split2));
+
+            var table = StoreObjectIdentifier.Create(split1EntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(split2EntityType, StoreObjectType.Table));
+
+            Assert.Equal("split_table", split1EntityType.GetTableName());
+            Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp)).GetColumnName(table));
+
+            Assert.Equal("split_table", split2EntityType.GetTableName());
+            Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp)).GetColumnName(table));
+
+            Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common)).GetColumnName(table));
+            Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common)).GetColumnName(table));
+
+            var foreignKey = split2EntityType.GetForeignKeys().Single();
+            Assert.Same(split1EntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
+            Assert.Same(split2EntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
+            Assert.Equal(split1EntityType.FindPrimaryKey().GetName(), split2EntityType.FindPrimaryKey().GetName());
+            Assert.Equal(
+                foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
+                foreignKey.Properties.Single().GetColumnName(table));
+            Assert.Empty(split1EntityType.GetForeignKeys());
+        }
+
+        [Fact]
+        public void Owned_entity_with_table_splitting()
+        {
+            var model = BuildModel(b => b.Entity<Owner>().OwnsOne(o => o.Owned));
+
+            var ownerEntityType = model.FindEntityType(typeof(Owner));
+            var ownedEntityType = model.FindEntityType(typeof(Owned));
+
+            Assert.Equal("owner", ownerEntityType.GetTableName());
+            Assert.Equal("owner", ownedEntityType.GetTableName());
+            var table = StoreObjectIdentifier.Create(ownerEntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value);
+
+            Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+
+            var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey(), ownedEntityType.FindPrimaryKey());
+            Assert.Equal("pk_owner", ownerKey.GetName());
+            Assert.Equal("pk_owner", ownedKey.GetName());
+            Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
+            Assert.Equal("id", ownedKey.Properties.Single().GetColumnName(table));
+        }
+
+        [Fact]
+        public void Owned_entity_without_table_splitting()
+        {
+            var model = BuildModel(b =>
+                b.Entity<Owner>().OwnsOne(o => o.Owned).ToTable("another_table"));
+
+            var ownedEntityType = model.FindEntityType(typeof(Owned));
+
+            Assert.Equal("pk_another_table", ownedEntityType.FindPrimaryKey().GetName());
+            Assert.Equal("another_table", ownedEntityType.GetTableName());
+            Assert.Equal("owned_property", ownedEntityType.FindProperty("OwnedProperty")
+                .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+        }
+
+        private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null)
+            => BuildModel(builderAction, culture).GetEntityTypes().Single();
+
+        private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo culture = null)
+        {
+            var conventionSet = SqliteTestHelpers.Instance.CreateConventionSetBuilder().CreateConventionSet();
 
             var optionsBuilder = new DbContextOptionsBuilder();
-            optionsBuilder.UseSnakeCaseNamingConvention(cultureInfo);
-            new NamingConventionSetPlugin(optionsBuilder.Options).ModifyConventions(conventionSet);
+            SqliteTestHelpers.Instance.UseProviderOptions(optionsBuilder);
+            optionsBuilder.UseSnakeCaseNamingConvention(culture);
+            var plugin = new NamingConventionSetPlugin(optionsBuilder.Options);
+            plugin.ModifyConventions(conventionSet);
 
-            var builder = new ModelBuilder(conventionSet);
-            buildAction(builder);
-            return builder.FinalizeModel();
+            var modelBuilder = new ModelBuilder(conventionSet);
+            builderAction(modelBuilder);
+            return modelBuilder.FinalizeModel();
         }
 
-        private IEntityType BuildEntityType(string entityTypeName, Action<EntityTypeBuilder> buildAction, CultureInfo cultureInfo = null)
-            => BuildModel(b => buildAction(b.Entity(entityTypeName)), cultureInfo).GetEntityTypes().Single();
+        public class SampleEntity
+        {
+            public int SampleEntityId { get; set; }
+            public int SomeProperty { get; set; }
+        }
 
-        #endregion
+        public class Blog
+        {
+            public int BlogId { get; set; }
+            public List<Post> Posts { get; set; }
+        }
+
+        public class Post
+        {
+            public int PostId { get; set; }
+            public Blog Blog { get; set; }
+            public int BlogId { get; set; }
+        }
+
+        public class Parent
+        {
+            public int Id { get; set; }
+            public int ParentProperty { get; set; }
+        }
+
+        public class Child : Parent
+        {
+            public int ChildProperty { get; set; }
+        }
+
+        public class Split1
+        {
+            public int Id { get; set; }
+            public int OneProp { get; set; }
+            public int Common { get; set; }
+
+            public Split2 S2 { get; set; }
+        }
+
+        public class Split2
+        {
+            public int Id { get; set; }
+            public int TwoProp { get; set; }
+            public int Common { get; set; }
+
+            public Split1 S1 { get; set; }
+        }
+
+        public class Owner
+        {
+            public int Id { get; set; }
+            public int OwnerProperty { get; set; }
+            public Owned Owned { get; set; }
+        }
+
+        public class Owned
+        {
+            public int OwnedProperty { get; set; }
+        }
     }
 }

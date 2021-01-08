@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EFCore.NamingConventions.Internal
 {
@@ -66,25 +64,7 @@ namespace EFCore.NamingConventions.Internal
         public virtual void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder,
             IConventionContext<IConventionPropertyBuilder> context)
-        {
-            var entityType = propertyBuilder.Metadata.DeclaringEntityType;
-            var property = propertyBuilder.Metadata;
-
-            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(property.GetColumnBaseName()));
-
-            foreach (var storeObjectType in _storeObjectTypes)
-            {
-                var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
-                if (identifier is null)
-                    continue;
-
-                if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
-                {
-                    propertyBuilder.HasColumnName(
-                        _namingNameRewriter.RewriteName(property.GetColumnName(identifier.Value)), identifier.Value);
-                }
-            }
-        }
+            => RewriteColumnName(propertyBuilder);
 
         public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
         {
@@ -102,27 +82,11 @@ namespace EFCore.NamingConventions.Internal
                 ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
                 ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
 
-                // Also need to reset all primary key properties
-                foreach (var keyProperty in ownedEntityType.FindPrimaryKey().Properties)
+                // We've previously set rewritten column names when the entity was originally added (before becoming owned).
+                // These need to be rewritten again to include the owner prefix.
+                foreach (var property in ownedEntityType.GetProperties())
                 {
-                    keyProperty.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
-
-                    foreach (var storeObjectType in _storeObjectTypes)
-                    {
-                        var identifier = StoreObjectIdentifier.Create(ownedEntityType, storeObjectType);
-                        if (identifier is null)
-                            continue;
-
-                        if (keyProperty.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
-                        {
-#pragma warning disable EF1001
-                            // TODO: Using internal APIs to remove the override
-                            var tableOverrides = (IDictionary<StoreObjectIdentifier, RelationalPropertyOverrides>)
-                                keyProperty[RelationalAnnotationNames.RelationalOverrides];
-                            tableOverrides.Remove(identifier.Value);
-#pragma warning restore EF1001
-                        }
-                    }
+                    RewriteColumnName(property.Builder);
                 }
             }
         }
@@ -135,40 +99,50 @@ namespace EFCore.NamingConventions.Internal
                 return;
             }
 
+            var entityType = entityTypeBuilder.Metadata;
+
             // The table's name is changing - rewrite keys, index names
-            if (entityTypeBuilder.Metadata.FindPrimaryKey() is IConventionKey primaryKey)
+            if (entityType.FindPrimaryKey() is IConventionKey primaryKey)
             {
-                primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
+                if (entityType.BaseType is not null
+                    && entityType.GetTableName() != entityType.BaseType.GetTableName())
+                {
+                    // It's not yet possible to set the PK name with TPT, see https://github.com/dotnet/efcore/issues/23444.
+                    primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                }
+                else
+                {
+                    primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
+                }
             }
 
-            foreach (var foreignKey in entityTypeBuilder.Metadata.GetForeignKeys())
+            foreach (var foreignKey in entityType.GetForeignKeys())
             {
                 foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKey.GetDefaultName()));
             }
 
-            foreach (var index in entityTypeBuilder.Metadata.GetIndexes())
+            foreach (var index in entityType.GetIndexes())
             {
                 index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(index.GetDefaultDatabaseName()));
             }
 
-            if (oldAnnotation?.Value is null &&
-                annotation?.Value is not null &&
-                entityTypeBuilder.Metadata.FindOwnership() is IConventionForeignKey ownership &&
+            if (annotation?.Value is not null &&
+                entityType.FindOwnership() is IConventionForeignKey ownership &&
                 (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
             {
                 // An owned entity's table is being set explicitly - this is the trigger to undo table splitting (which is the default).
 
                 // When the entity became owned, we prefixed all of its properties - we must now undo that.
-                foreach (var property in entityTypeBuilder.Metadata.GetProperties()
-                    .Except(entityTypeBuilder.Metadata.FindPrimaryKey().Properties)
+                foreach (var property in entityType.GetProperties()
+                    .Except(entityType.FindPrimaryKey().Properties)
                     .Where(p => p.Builder.CanSetColumnName(null)))
                 {
-                    property.Builder.HasColumnName(_namingNameRewriter.RewriteName(property.GetDefaultColumnBaseName()));
+                    RewriteColumnName(property.Builder);
                 }
 
                 // We previously rewrote the owned entity's primary key name, when the owned entity was still in table splitting.
                 // Now that its getting its own table, rewrite the primary key constraint name again.
-                if (entityTypeBuilder.Metadata.FindPrimaryKey() is IConventionKey key)
+                if (entityType.FindPrimaryKey() is IConventionKey key)
                 {
                     key.Builder.HasName(_namingNameRewriter.RewriteName(key.GetDefaultName()));
                 }
@@ -221,6 +195,34 @@ namespace EFCore.NamingConventions.Internal
                             }
                         }
                     }
+                }
+            }
+        }
+
+        private void RewriteColumnName(IConventionPropertyBuilder propertyBuilder)
+        {
+            var property = propertyBuilder.Metadata;
+            var entityType = property.DeclaringEntityType;
+
+            // Remove any previous setting of the column name we may have done, so we can get the default recalculated below.
+            property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+
+            // TODO: The following is a temporary hack. We should probably just always set the relational override below,
+            // but https://github.com/dotnet/efcore/pull/23834
+#pragma warning disable 618
+            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(property.GetColumnName()));
+#pragma warning restore 618
+
+            foreach (var storeObjectType in _storeObjectTypes)
+            {
+                var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
+                if (identifier is null)
+                    continue;
+
+                if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
+                {
+                    propertyBuilder.HasColumnName(
+                        _namingNameRewriter.RewriteName(property.GetColumnName(identifier.Value)), identifier.Value);
                 }
             }
         }
