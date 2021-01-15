@@ -67,6 +67,14 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
+        public virtual NamingConventionsOptionsExtension WithLowerCaseFirstCharacterNamingConvention(CultureInfo culture = null)
+        {
+            var clone = Clone();
+            clone._namingConvention = NamingConvention.LowerCaseFirstCharacter;
+            clone._culture = culture;
+            return clone;
+        }
+
         public void Validate(IDbContextOptions options) {}
 
         public void ApplyServices(IServiceCollection services)
