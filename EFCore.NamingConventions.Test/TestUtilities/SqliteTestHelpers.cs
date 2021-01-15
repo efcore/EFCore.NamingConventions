@@ -25,6 +25,6 @@ namespace Microsoft.EntityFrameworkCore.TestUtilities
 
 #pragma warning disable EF1001
         public override LoggingDefinitions LoggingDefinitions { get; } = new SqliteLoggingDefinitions();
-#pragma warning enable EF1001
+#pragma warning restore EF1001
     }
 }
