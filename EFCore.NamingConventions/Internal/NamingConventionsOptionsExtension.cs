@@ -70,7 +70,7 @@ namespace EFCore.NamingConventions.Internal
         public virtual NamingConventionsOptionsExtension WithLowerCaseFirstCharacterNamingConvention(CultureInfo culture = null)
         {
             var clone = Clone();
-            clone._namingConvention = NamingConvention.LowerCaseFirstCharacter;
+            clone._namingConvention = NamingConvention.CamelCase;
             clone._culture = culture;
             return clone;
         }

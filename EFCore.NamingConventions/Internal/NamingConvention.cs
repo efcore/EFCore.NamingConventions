@@ -5,7 +5,7 @@ namespace EFCore.NamingConventions.Internal
         None,
         SnakeCase,
         LowerCase,
-        LowerCaseFirstCharacter,
+        CamelCase,
         UpperCase,
         UpperSnakeCase
     }

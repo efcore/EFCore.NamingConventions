@@ -84,7 +84,7 @@ namespace Microsoft.EntityFrameworkCore
             where TContext : DbContext
             => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
-        public static DbContextOptionsBuilder UseLowerCaseFirstCharacterNamingConvention(
+        public static DbContextOptionsBuilder UseCamelCaseNamingConvention(
             [NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
         {
             Check.NotNull(optionsBuilder, nameof(optionsBuilder));
@@ -101,6 +101,6 @@ namespace Microsoft.EntityFrameworkCore
         public static DbContextOptionsBuilder<TContext> UseLowerCaseFirstCharacterNamingConvention<TContext>(
             [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
-            => (DbContextOptionsBuilder<TContext>)UseLowerCaseFirstCharacterNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+            => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
     }
 }
