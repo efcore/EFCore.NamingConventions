@@ -22,6 +22,11 @@ namespace EFCore.NamingConventions.Test
                 new LowerCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 
         [Fact]
+        public void CamelCase()
+            => Assert.Equal("fullName",
+                new CamelCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+
+        [Fact]
         public void UpperCase()
             => Assert.Equal("FULLNAME",
                 new UpperCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));

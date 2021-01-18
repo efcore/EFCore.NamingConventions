@@ -83,5 +83,24 @@ namespace Microsoft.EntityFrameworkCore
             [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
             => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+
+        public static DbContextOptionsBuilder UseCamelCaseNamingConvention(
+            [NotNull] this DbContextOptionsBuilder optionsBuilder, CultureInfo culture = null)
+        {
+            Check.NotNull(optionsBuilder, nameof(optionsBuilder));
+
+            var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
+                    ?? new NamingConventionsOptionsExtension())
+                .WithCamelCaseNamingConvention(culture);
+
+            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+            return optionsBuilder;
+        }
+
+        public static DbContextOptionsBuilder<TContext> UseCamelCaseNamingConvention<TContext>(
+            [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
+            where TContext : DbContext
+            => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
     }
 }
