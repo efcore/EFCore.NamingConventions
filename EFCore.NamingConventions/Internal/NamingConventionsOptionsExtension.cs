@@ -67,7 +67,7 @@ namespace EFCore.NamingConventions.Internal
             return clone;
         }
 
-        public virtual NamingConventionsOptionsExtension WithLowerCaseFirstCharacterNamingConvention(CultureInfo culture = null)
+        public virtual NamingConventionsOptionsExtension WithCamelCaseNamingConvention(CultureInfo culture = null)
         {
             var clone = Clone();
             clone._namingConvention = NamingConvention.CamelCase;

@@ -91,14 +91,14 @@ namespace Microsoft.EntityFrameworkCore
 
             var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                     ?? new NamingConventionsOptionsExtension())
-                .WithLowerCaseFirstCharacterNamingConvention(culture);
+                .WithCamelCaseNamingConvention(culture);
 
             ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
             return optionsBuilder;
         }
 
-        public static DbContextOptionsBuilder<TContext> UseLowerCaseFirstCharacterNamingConvention<TContext>(
+        public static DbContextOptionsBuilder<TContext> UseCamelCaseNamingConvention<TContext>(
             [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
             => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
