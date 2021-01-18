@@ -105,6 +105,7 @@ namespace EFCore.NamingConventions.Internal
                             NamingConvention.LowerCase => "using lower case naming",
                             NamingConvention.UpperCase => "using upper case naming",
                             NamingConvention.UpperSnakeCase => "using upper snake-case naming",
+                            NamingConvention.CamelCase => "using camel-case naming",
                             _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + Extension._namingConvention)
                         });
 
