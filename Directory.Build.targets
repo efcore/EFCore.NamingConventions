@@ -1,16 +1,16 @@
 ﻿<Project>
   <ItemGroup>
     <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="5.0.1" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="5.0.1" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="5.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="5.0.2" />
 
     <!-- Test -->
     <PackageReference Update="xunit" Version="2.4.1" />
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.8.0" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.1" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.1" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Specification.Tests" Version="5.0.1" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Specification.Tests" Version="5.0.2" />
     <PackageReference Update="Microsoft.Extensions.Configuration" Version="5.0.0" />
     <PackageReference Update="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Update="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
