@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EFCore.NamingConventions.Internal
 {
@@ -94,20 +95,36 @@ namespace EFCore.NamingConventions.Internal
         public void ProcessEntityTypeAnnotationChanged(IConventionEntityTypeBuilder entityTypeBuilder, string name,
             IConventionAnnotation annotation, IConventionAnnotation oldAnnotation, IConventionContext<IConventionAnnotation> context)
         {
-            if (name != RelationalAnnotationNames.TableName)
+            var entityType = entityTypeBuilder.Metadata;
+
+            if (name != RelationalAnnotationNames.TableName
+                || StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is not StoreObjectIdentifier tableIdentifier)
             {
                 return;
             }
 
-            var entityType = entityTypeBuilder.Metadata;
-
             // The table's name is changing - rewrite keys, index names
+
             if (entityType.FindPrimaryKey() is IConventionKey primaryKey)
             {
-                if (entityType.BaseType is not null
-                    && entityType.GetTableName() != entityType.BaseType.GetTableName())
+                // We need to rewrite the PK name.
+                // However, this isn't yet supported with TPT, see https://github.com/dotnet/efcore/issues/23444.
+                // So we need to check if the entity is within a TPT hierarchy, or is an owned entity within a TPT hierarchy.
+                var tempEntityType = (IEntityType)entityType;
+                while (true)
                 {
-                    // It's not yet possible to set the PK name with TPT, see https://github.com/dotnet/efcore/issues/23444.
+                    var foreignKey = tempEntityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault();
+                    if (foreignKey is null)
+                    {
+                        break;
+                    }
+
+                    tempEntityType = foreignKey.PrincipalEntityType;
+                }
+
+                if (tempEntityType.BaseType is not null
+                    && tempEntityType.GetTableName() != tempEntityType.BaseType.GetTableName())
+                {
                     primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
                 }
                 else

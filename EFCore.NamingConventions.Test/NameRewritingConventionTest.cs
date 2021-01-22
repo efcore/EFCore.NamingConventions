@@ -158,6 +158,75 @@ namespace EFCore.NamingConventions.Test
         }
 
         [Fact]
+        public void TPH_with_owned()
+        {
+            var model = BuildModel(b =>
+            {
+                b.Entity<Parent>();
+                b.Entity<ChildWithOwned>().OwnsOne(c => c.Owned);
+            });
+
+            var parentEntityType = model.FindEntityType(typeof(Parent));
+            var childEntityType = model.FindEntityType(typeof(ChildWithOwned));
+            var ownedEntityType = model.FindEntityType(typeof(Owned));
+
+            Assert.Equal("parent", parentEntityType.GetTableName());
+            Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Equal("parent", childEntityType.GetTableName());
+            Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
+
+            Assert.Equal("parent", ownedEntityType.GetTableName());
+            Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+        }
+
+        [Fact]
+        public void TPT_with_owned()
+        {
+            var model = BuildModel(b =>
+            {
+                b.Entity<Parent>().ToTable("parent");
+                b.Entity<ChildWithOwned>(
+                    e =>
+                    {
+                        e.ToTable("child");
+                        e.OwnsOne(c => c.Owned);
+                    });
+            });
+
+            var parentEntityType = model.FindEntityType(typeof(Parent));
+            var childEntityType = model.FindEntityType(typeof(ChildWithOwned));
+            var ownedEntityType = model.FindEntityType(typeof(Owned));
+
+            Assert.Equal("parent", parentEntityType.GetTableName());
+            Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Equal("child", childEntityType.GetTableName());
+            Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildWithOwned.ChildProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            var parentKey = parentEntityType.FindPrimaryKey();
+            var childKey = childEntityType.FindPrimaryKey();
+
+            Assert.Equal("PK_parent", parentKey.GetName());
+            Assert.Equal("PK_parent", childKey.GetName());
+
+            Assert.Equal("child", ownedEntityType.GetTableName());
+            Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+        }
+
+        [Fact]
         public void Table_splitting()
         {
             var model = BuildModel(b =>
@@ -279,6 +348,12 @@ namespace EFCore.NamingConventions.Test
         public class Child : Parent
         {
             public int ChildProperty { get; set; }
+        }
+
+        public class ChildWithOwned : Parent
+        {
+            public int ChildProperty { get; set; }
+            public Owned Owned { get; set; }
         }
 
         public class Split1
