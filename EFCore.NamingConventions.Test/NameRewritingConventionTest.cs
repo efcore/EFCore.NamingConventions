@@ -8,6 +8,7 @@ using System.Linq;
 using EFCore.NamingConventions.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Xunit;
 
@@ -29,6 +30,23 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
                 .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
         }
+
+        //[Fact]
+        //public void ColumnInMigrationTable()
+        //{
+        //    var entityType = BuildEntityType(b => b.Entity<HistoryRow>(build => new HistoryRow("Migration1", "7.0.0")));
+        //    Assert.Equal("migration_id", entityType.FindProperty(nameof(HistoryRow.MigrationId))
+        //        .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        //}
+
+        //[Fact]
+        //public void ColumnInMigrationTableIgnored()
+        //{
+        //    var entityType = BuildEntityType(b => new HistoryRow("Migration1", "7.0.0"), ignoreMigrationTable: true);
+        //    Assert.Equal("MigrationId", entityType.FindProperty(nameof(HistoryRow.MigrationId))
+        //        .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        //}
+
 
         [Fact]
         public void Column_with_turkish_culture()
@@ -302,16 +320,16 @@ namespace EFCore.NamingConventions.Test
                 .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
         }
 
-        private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null)
-            => BuildModel(builderAction, culture).GetEntityTypes().Single();
+        private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null, bool ignoreMigrationTable = false)
+            => BuildModel(builderAction, culture, ignoreMigrationTable).GetEntityTypes().Single();
 
-        private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo culture = null)
+        private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo culture = null, bool ignoreMigrationTable = false)
         {
             var conventionSet = SqliteTestHelpers.Instance.CreateConventionSetBuilder().CreateConventionSet();
 
             var optionsBuilder = new DbContextOptionsBuilder();
             SqliteTestHelpers.Instance.UseProviderOptions(optionsBuilder);
-            optionsBuilder.UseSnakeCaseNamingConvention(culture);
+            optionsBuilder.UseSnakeCaseNamingConvention(culture, ignoreMigrationTable);
             var plugin = new NamingConventionSetPlugin(optionsBuilder.Options);
             plugin.ModifyConventions(conventionSet);
 

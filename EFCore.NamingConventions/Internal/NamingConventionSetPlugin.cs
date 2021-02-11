@@ -17,6 +17,7 @@ namespace EFCore.NamingConventions.Internal
             var extension = _options.FindExtension<NamingConventionsOptionsExtension>();
             var namingStyle = extension.NamingConvention;
             var culture = extension.Culture;
+            var ignoreMigrationTable = extension.IgnoreMigrationTable;
             if (namingStyle == NamingConvention.None)
             {
                 return conventionSet;
@@ -30,7 +31,7 @@ namespace EFCore.NamingConventions.Internal
                 NamingConvention.UpperCase => new UpperCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 NamingConvention.UpperSnakeCase => new UpperSnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
                 _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + namingStyle)
-            });
+            }, ignoreMigrationTable);
 
             conventionSet.EntityTypeAddedConventions.Add(convention);
             conventionSet.EntityTypeAnnotationChangedConventions.Add(convention);
