@@ -41,6 +41,17 @@ SELECT c.id, c.full_name
         WHERE c.full_name = 'John Doe';
 ```
 
+## Ignoring the Migration Table `__EFMigrationsHistory`
+
+To make migrations of existing databases more robust one might want to leave the migrations table out of the naming conventions.
+
+```c#
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    => optionsBuilder
+        .UseNpgsql(...)
+        .UseSnakeCaseNamingConvention(ignoreMigrationTable: true);
+```
+
 ## Supported naming conventions
 
 * UseSnakeCaseNamingConvention: `FullName` becomes `full_name`

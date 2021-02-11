@@ -12,12 +12,14 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     private DbContextOptionsExtensionInfo? _info;
     private NamingConvention _namingConvention;
     private CultureInfo? _culture;
+    private bool _ignoreMigrationTable;
 
     public NamingConventionsOptionsExtension() {}
     protected NamingConventionsOptionsExtension(NamingConventionsOptionsExtension copyFrom)
     {
         _namingConvention = copyFrom._namingConvention;
         _culture = copyFrom._culture;
+        _ignoreMigrationTable = copyFrom._ignoreMigrationTable;
     }
 
     public virtual DbContextOptionsExtensionInfo Info => _info ??= new ExtensionInfo(this);
@@ -26,6 +28,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
 
     internal virtual NamingConvention NamingConvention => _namingConvention;
     internal virtual CultureInfo? Culture => _culture;
+    internal virtual bool IgnoreMigrationTable => _ignoreMigrationTable;
 
     public virtual NamingConventionsOptionsExtension WithoutNaming()
     {
@@ -34,43 +37,48 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention(CultureInfo? culture = null)
+    public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention(CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.SnakeCase;
         clone._culture = culture;
+        clone._ignoreMigrationTable = ignoreMigrationTable;
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention(CultureInfo? culture = null)
+    public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention(CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.LowerCase;
         clone._culture = culture;
+        clone._ignoreMigrationTable = ignoreMigrationTable;
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention(CultureInfo? culture = null)
+    public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention(CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperCase;
         clone._culture = culture;
+        clone._ignoreMigrationTable = ignoreMigrationTable;
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithUpperSnakeCaseNamingConvention(CultureInfo? culture = null)
+    public virtual NamingConventionsOptionsExtension WithUpperSnakeCaseNamingConvention(CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperSnakeCase;
         clone._culture = culture;
+        clone._ignoreMigrationTable = ignoreMigrationTable;
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithCamelCaseNamingConvention(CultureInfo? culture = null)
+    public virtual NamingConventionsOptionsExtension WithCamelCaseNamingConvention(CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.CamelCase;
         clone._culture = culture;
+        clone._ignoreMigrationTable = ignoreMigrationTable;
         return clone;
     }
 
@@ -109,6 +117,12 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
                         _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + Extension._namingConvention)
                     });
 
+                    if (Extension._ignoreMigrationTable)
+                    {
+                        builder
+                            .Append(" ignoring the migrations table");
+                    }
+
                     if (Extension._culture is null)
                     {
                         builder
@@ -128,6 +142,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         {
             var hashCode = Extension._namingConvention.GetHashCode();
             hashCode = (hashCode * 3) ^ (Extension._culture?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 7) ^ (Extension._ignoreMigrationTable.GetHashCode());
             return hashCode;
         }
 
@@ -138,6 +153,10 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         {
             debugInfo["Naming:UseNamingConvention"]
                 = Extension._namingConvention.GetHashCode().ToString(CultureInfo.InvariantCulture);
+
+            debugInfo["Naming:IgnoreMigrationTable"]
+                    = Extension._ignoreMigrationTable.GetHashCode().ToString(CultureInfo.InvariantCulture);
+
             if (Extension._culture != null)
             {
                 debugInfo["Naming:Culture"]

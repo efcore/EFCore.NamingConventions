@@ -9,14 +9,15 @@ namespace Microsoft.EntityFrameworkCore;
 public static class NamingConventionsExtensions
 {
     public static DbContextOptionsBuilder UseSnakeCaseNamingConvention(
-        this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithSnakeCaseNamingConvention(culture);
+            .WithSnakeCaseNamingConvention(culture, ignoreMigrationTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -24,19 +25,20 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null, bool ignoreMigrationTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, ignoreMigrationTable);
 
     public static DbContextOptionsBuilder UseLowerCaseNamingConvention(
-        this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithLowerCaseNamingConvention(culture);
+            .WithLowerCaseNamingConvention(culture, ignoreMigrationTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -44,20 +46,22 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseLowerCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder ,culture);
+        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder ,culture, ignoreMigrationTable);
 
     public static DbContextOptionsBuilder UseUpperCaseNamingConvention(
-        this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithUpperCaseNamingConvention(culture);
+            .WithUpperCaseNamingConvention(culture, ignoreMigrationTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -65,20 +69,22 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseUpperCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseUpperCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, ignoreMigrationTable);
 
     public static DbContextOptionsBuilder UseUpperSnakeCaseNamingConvention(
-        this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithUpperSnakeCaseNamingConvention(culture);
+            .WithUpperSnakeCaseNamingConvention(culture, ignoreMigrationTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -86,20 +92,22 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseUpperSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, ignoreMigrationTable);
 
     public static DbContextOptionsBuilder UseCamelCaseNamingConvention(
-        this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithCamelCaseNamingConvention(culture);
+            .WithCamelCaseNamingConvention(culture, ignoreMigrationTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -107,8 +115,9 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseCamelCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder,
-        CultureInfo? culture = null)
+        [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null,
+        bool ignoreMigrationTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, ignoreMigrationTable);
 }
