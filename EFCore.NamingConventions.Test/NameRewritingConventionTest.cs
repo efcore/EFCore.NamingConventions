@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
 using System.Linq;
 using EFCore.NamingConventions.Internal;
@@ -227,7 +228,7 @@ namespace EFCore.NamingConventions.Test
         }
 
         [Fact]
-        public void Table_splitting()
+        public void Table_splitting1()
         {
             var model = BuildModel(b =>
             {
@@ -238,7 +239,42 @@ namespace EFCore.NamingConventions.Test
                         e.HasOne(s1 => s1.S2).WithOne(s2 => s2.S1).HasForeignKey<Split2>(s2 => s2.Id);
                     });
 
-                b.Entity<Split2>(e => e.ToTable("split_table"));
+                b.Entity<Split2>().ToTable("split_table");
+            });
+
+            var split1EntityType = model.FindEntityType(typeof(Split1));
+            var split2EntityType = model.FindEntityType(typeof(Split2));
+
+            var table = StoreObjectIdentifier.Create(split1EntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(split2EntityType, StoreObjectType.Table));
+
+            Assert.Equal("split_table", split1EntityType.GetTableName());
+            Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp)).GetColumnName(table));
+
+            Assert.Equal("split_table", split2EntityType.GetTableName());
+            Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp)).GetColumnName(table));
+
+            Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common)).GetColumnName(table));
+            Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common)).GetColumnName(table));
+
+            var foreignKey = split2EntityType.GetForeignKeys().Single();
+            Assert.Same(split1EntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
+            Assert.Same(split2EntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
+            Assert.Equal(split1EntityType.FindPrimaryKey().GetName(), split2EntityType.FindPrimaryKey().GetName());
+            Assert.Equal(
+                foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
+                foreignKey.Properties.Single().GetColumnName(table));
+            Assert.Empty(split1EntityType.GetForeignKeys());
+        }
+
+        [Fact]
+        public void Table_splitting_and_explicit_owner_table()
+        {
+            var model = BuildModel(b =>
+            {
+                b.Entity<Split1>().HasOne(s1 => s1.S2).WithOne(s2 => s2.S1).HasForeignKey<Split2>(s2 => s2.Id);
+                b.Entity<Split2>().ToTable("split_table");
+                b.Entity<Split1>().ToTable("split_table");
             });
 
             var split1EntityType = model.FindEntityType(typeof(Split1));
@@ -286,6 +322,70 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("pk_owner", ownedKey.GetName());
             Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
             Assert.Equal("id", ownedKey.Properties.Single().GetColumnName(table));
+        }
+
+        [Fact]
+        public void Owned_entity_with_table_splitting_and_explicit_owner_table()
+        {
+            var model = BuildModel(
+                b => b.Entity<Owner>(
+                    e =>
+                    {
+                        e.OwnsOne(o => o.Owned);
+                        e.ToTable("destination_table");
+                    }));
+
+            var ownerEntityType = model.FindEntityType(typeof(Owner));
+            var ownedEntityType = model.FindEntityType(typeof(Owned));
+
+            Assert.Equal("destination_table", ownerEntityType.GetTableName());
+            Assert.Equal("destination_table", ownedEntityType.GetTableName());
+            var table = StoreObjectIdentifier.Create(ownerEntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value);
+
+            Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+
+            var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey(), ownedEntityType.FindPrimaryKey());
+            Assert.Equal("pk_destination_table", ownerKey.GetName());
+            Assert.Equal("pk_destination_table", ownedKey.GetName());
+            Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
+            Assert.Equal("id", ownedKey.Properties.Single().GetColumnName(table));
+        }
+
+        [Fact]
+        public void Owned_entity_twice_with_table_splitting_and_explicit_owner_table()
+        {
+            var model = BuildModel(
+                b => b.Entity<Owner>(
+                    e =>
+                    {
+                        e.OwnsOne("owned1", o => o.Owned);
+                        e.OwnsOne("owned2", o => o.Owned2);
+                        e.ToTable("destination_table");
+                    }));
+
+            var ownerEntityType = model.FindEntityType(typeof(Owner));
+            var owned1EntityType = model.FindEntityType("owned1");
+            var owned2EntityType = model.FindEntityType("owned2");
+
+            Assert.Equal("destination_table", ownerEntityType.GetTableName());
+            Assert.Equal("destination_table", owned1EntityType.GetTableName());
+            Assert.Equal("destination_table", owned2EntityType.GetTableName());
+            var table = StoreObjectIdentifier.Create(ownerEntityType, StoreObjectType.Table)!.Value;
+            Assert.Equal(table, StoreObjectIdentifier.Create(owned1EntityType, StoreObjectType.Table)!.Value);
+            Assert.Equal(table, StoreObjectIdentifier.Create(owned2EntityType, StoreObjectType.Table)!.Value);
+
+            Assert.Equal("owned_owned_property", owned1EntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+            Assert.Equal("owned2_owned_property", owned2EntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+
+            var (ownerKey, owned1Key, owned2Key) =
+                (ownerEntityType.FindPrimaryKey(), owned1EntityType.FindPrimaryKey(), owned1EntityType.FindPrimaryKey());
+            Assert.Equal("pk_destination_table", ownerKey.GetName());
+            Assert.Equal("pk_destination_table", owned1Key.GetName());
+            Assert.Equal("pk_destination_table", owned2Key.GetName());
+            Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
+            Assert.Equal("id", owned1Key.Properties.Single().GetColumnName(table));
+            Assert.Equal("id", owned2Key.Properties.Single().GetColumnName(table));
         }
 
         [Fact]
@@ -379,6 +479,8 @@ namespace EFCore.NamingConventions.Test
             public int Id { get; set; }
             public int OwnerProperty { get; set; }
             public Owned Owned { get; set; }
+            [NotMapped]
+            public Owned Owned2 { get; set; }
         }
 
         public class Owned

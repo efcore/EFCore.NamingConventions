@@ -83,6 +83,8 @@ namespace EFCore.NamingConventions.Internal
                 ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
                 ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
 
+                ownedEntityType.FindPrimaryKey()?.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+
                 // We've previously set rewritten column names when the entity was originally added (before becoming owned).
                 // These need to be rewritten again to include the owner prefix.
                 foreach (var property in ownedEntityType.GetProperties())
@@ -110,26 +112,15 @@ namespace EFCore.NamingConventions.Internal
                 // We need to rewrite the PK name.
                 // However, this isn't yet supported with TPT, see https://github.com/dotnet/efcore/issues/23444.
                 // So we need to check if the entity is within a TPT hierarchy, or is an owned entity within a TPT hierarchy.
-                var tempEntityType = (IEntityType)entityType;
-                while (true)
-                {
-                    var foreignKey = tempEntityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault();
-                    if (foreignKey is null)
-                    {
-                        break;
-                    }
 
-                    tempEntityType = foreignKey.PrincipalEntityType;
-                }
-
-                if (tempEntityType.BaseType is not null
-                    && tempEntityType.GetTableName() != tempEntityType.BaseType.GetTableName())
+                if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null
+                    && (entityType.BaseType is null || entityType.GetTableName() == entityType.BaseType.GetTableName()))
                 {
-                    primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                    primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
                 }
                 else
                 {
-                    primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
+                    primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
                 }
             }
 
@@ -170,7 +161,14 @@ namespace EFCore.NamingConventions.Internal
             => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
 
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
-            => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetDefaultName()));
+        {
+            var entityType = keyBuilder.Metadata.DeclaringEntityType;
+
+            if (entityType.FindOwnership() is null)
+            {
+                keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetDefaultName()));
+            }
+        }
 
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
