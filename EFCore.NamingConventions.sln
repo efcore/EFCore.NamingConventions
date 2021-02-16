@@ -7,8 +7,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F6BE1E4F-B395-456A-9856-0C9AE4F626C0}"
 ProjectSection(SolutionItems) = preProject
 	Directory.Build.props = Directory.Build.props
-	Directory.Build.targets = Directory.Build.targets
 	.github\workflows\build.yml = .github\workflows\build.yml
+	Directory.Packages.props = Directory.Packages.props
 EndProjectSection
 EndProject
 Global

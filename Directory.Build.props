@@ -1,11 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
+    <AnalysisLevel>latest</AnalysisLevel>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <LangVersion>9.0</LangVersion>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-  </ItemGroup>
 </Project>
