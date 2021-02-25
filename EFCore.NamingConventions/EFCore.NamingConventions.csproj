@@ -4,7 +4,7 @@
     <AssemblyName>EFCore.NamingConventions</AssemblyName>
     <RootNamespace>EFCore</RootNamespace>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VersionPrefix>1.1.0</VersionPrefix>
+    <VersionPrefix>1.1.1</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>
