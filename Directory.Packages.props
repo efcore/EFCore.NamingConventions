@@ -1,19 +1,24 @@
 ﻿<Project>
+  <PropertyGroup>
+    <EFCoreVersion>5.0.4</EFCoreVersion>
+    <MicrosoftExtensionsVersion>5.0.0</MicrosoftExtensionsVersion>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="$(EFCoreVersion)" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" />
 
     <!-- Test -->
     <PackageVersion Include="xunit" Version="2.4.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Specification.Tests" Version="5.0.2" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EFCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EFCoreVersion)" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Specification.Tests" Version="$(EFCoreVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="$(MicrosoftExtensionsVersion)" />
   </ItemGroup>
 </Project>
