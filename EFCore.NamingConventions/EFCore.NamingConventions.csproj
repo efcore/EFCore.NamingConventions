@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <VersionPrefix>5.0.2</VersionPrefix>
+    <TargetFramework>net6.0</TargetFramework>
+    <VersionPrefix>6.0.0-preview.3</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>

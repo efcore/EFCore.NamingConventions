@@ -4,24 +4,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EFCore.NamingConventions.Internal
 {
     public class NameRewritingConvention :
-        IEntityTypeAddedConvention, IEntityTypeAnnotationChangedConvention, IPropertyAddedConvention,
-        IForeignKeyOwnershipChangedConvention, IKeyAddedConvention, IForeignKeyAddedConvention,
-        IIndexAddedConvention, IEntityTypeBaseTypeChangedConvention, IModelFinalizingConvention
+        IEntityTypeAddedConvention,
+        IEntityTypeAnnotationChangedConvention,
+        IPropertyAddedConvention,
+        IForeignKeyOwnershipChangedConvention,
+        IKeyAddedConvention,
+        IForeignKeyAddedConvention,
+        IIndexAddedConvention,
+        IEntityTypeBaseTypeChangedConvention,
+        IModelFinalizingConvention
     {
         private static readonly StoreObjectType[] _storeObjectTypes
-            = { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery};
+            = { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery };
 
         private readonly INameRewriter _namingNameRewriter;
 
-        public NameRewritingConvention(INameRewriter nameRewriter) => _namingNameRewriter = nameRewriter;
+        public NameRewritingConvention(INameRewriter nameRewriter)
+            => _namingNameRewriter = nameRewriter;
 
         public virtual void ProcessEntityTypeAdded(
-            IConventionEntityTypeBuilder entityTypeBuilder, IConventionContext<IConventionEntityTypeBuilder> context)
+            IConventionEntityTypeBuilder entityTypeBuilder,
+            IConventionContext<IConventionEntityTypeBuilder> context)
         {
             var entityType = entityTypeBuilder.Metadata;
 
@@ -72,8 +79,7 @@ namespace EFCore.NamingConventions.Internal
             var foreignKey = relationshipBuilder.Metadata;
             var ownedEntityType = foreignKey.DeclaringEntityType;
 
-            if (foreignKey.IsOwnership &&
-                ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
+            if (foreignKey.IsOwnership && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
             {
                 // An entity type is becoming owned - this is complicated.
 
@@ -94,8 +100,12 @@ namespace EFCore.NamingConventions.Internal
             }
         }
 
-        public void ProcessEntityTypeAnnotationChanged(IConventionEntityTypeBuilder entityTypeBuilder, string name,
-            IConventionAnnotation annotation, IConventionAnnotation oldAnnotation, IConventionContext<IConventionAnnotation> context)
+        public void ProcessEntityTypeAnnotationChanged(
+            IConventionEntityTypeBuilder entityTypeBuilder,
+            string name,
+            IConventionAnnotation annotation,
+            IConventionAnnotation oldAnnotation,
+            IConventionContext<IConventionAnnotation> context)
         {
             var entityType = entityTypeBuilder.Metadata;
 
@@ -134,9 +144,9 @@ namespace EFCore.NamingConventions.Internal
                 index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(index.GetDefaultDatabaseName()));
             }
 
-            if (annotation?.Value is not null &&
-                entityType.FindOwnership() is IConventionForeignKey ownership &&
-                (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
+            if (annotation?.Value is not null
+                && entityType.FindOwnership() is IConventionForeignKey ownership
+                && (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
             {
                 // An owned entity's table is being set explicitly - this is the trigger to undo table splitting (which is the default).
 
@@ -157,7 +167,9 @@ namespace EFCore.NamingConventions.Internal
             }
         }
 
-        public void ProcessForeignKeyAdded(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<IConventionForeignKeyBuilder> context)
+        public void ProcessForeignKeyAdded(
+            IConventionForeignKeyBuilder relationshipBuilder,
+            IConventionContext<IConventionForeignKeyBuilder> context)
             => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
 
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
@@ -189,8 +201,7 @@ namespace EFCore.NamingConventions.Internal
                     if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
                     {
                         property.Builder.HasColumnName(
-                            _namingNameRewriter.RewriteName(entityType.ShortName()) +
-                            columnName.Substring(entityType.ShortName().Length));
+                            _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName.Substring(entityType.ShortName().Length));
                     }
 
                     foreach (var storeObjectType in _storeObjectTypes)
@@ -205,8 +216,8 @@ namespace EFCore.NamingConventions.Internal
                             if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
                             {
                                 property.Builder.HasColumnName(
-                                    _namingNameRewriter.RewriteName(entityType.ShortName()) +
-                                    columnName.Substring(entityType.ShortName().Length));
+                                    _namingNameRewriter.RewriteName(entityType.ShortName())
+                                    + columnName.Substring(entityType.ShortName().Length));
                             }
                         }
                     }
@@ -225,7 +236,14 @@ namespace EFCore.NamingConventions.Internal
             // TODO: The following is a temporary hack. We should probably just always set the relational override below,
             // but https://github.com/dotnet/efcore/pull/23834
 #pragma warning disable 618
-            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(property.GetColumnName()));
+            var table = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table);
+            var annotation = property.FindAnnotation(RelationalAnnotationNames.ColumnName);
+            var columnName = annotation == null
+                ? table == null
+                    ? property.GetDefaultColumnBaseName()
+                    : property.GetDefaultColumnName(table.Value)
+                : (string)annotation.Value;
+            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(columnName));
 #pragma warning restore 618
 
             foreach (var storeObjectType in _storeObjectTypes)
