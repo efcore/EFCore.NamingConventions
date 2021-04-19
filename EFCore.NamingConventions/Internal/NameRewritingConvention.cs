@@ -235,16 +235,10 @@ namespace EFCore.NamingConventions.Internal
 
             // TODO: The following is a temporary hack. We should probably just always set the relational override below,
             // but https://github.com/dotnet/efcore/pull/23834
-#pragma warning disable 618
-            var table = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table);
-            var annotation = property.FindAnnotation(RelationalAnnotationNames.ColumnName);
-            var columnName = annotation == null
-                ? table == null
+            var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
                     ? property.GetDefaultColumnBaseName()
-                    : property.GetDefaultColumnName(table.Value)
-                : (string)annotation.Value;
-            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(columnName));
-#pragma warning restore 618
+                    : property.GetDefaultColumnName(tableIdentifier);
+            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
 
             foreach (var storeObjectType in _storeObjectTypes)
             {
