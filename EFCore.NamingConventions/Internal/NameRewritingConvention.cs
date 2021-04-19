@@ -236,8 +236,8 @@ namespace EFCore.NamingConventions.Internal
             // TODO: The following is a temporary hack. We should probably just always set the relational override below,
             // but https://github.com/dotnet/efcore/pull/23834
             var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
-                    ? property.GetDefaultColumnBaseName()
-                    : property.GetDefaultColumnName(tableIdentifier);
+                ? property.GetDefaultColumnName(tableIdentifier)
+                : property.GetDefaultColumnBaseName();
             propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
 
             foreach (var storeObjectType in _storeObjectTypes)
