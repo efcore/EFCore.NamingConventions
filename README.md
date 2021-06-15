@@ -52,5 +52,5 @@ Have another naming convention in mind? Open an issue or even submit a PR - it's
 ## Important notes
 
 * If you have an existing database, adding this naming convention will cause a migration to produced, renaming everything. Be very cautious when doing this (the process currently involves dropping and recreating primary keys).
-* This plugin will work with any database provider and isn't related to PostgreSQL or Npgsql in any way.
+* This plugin will not work with any database provider and isn't related to PostgreSQL or Npgsql in any way.
 * This is a community-maintained plugin: it isn't an official part of Entity Framework Core and isn't supported by Microsoft in any way.
