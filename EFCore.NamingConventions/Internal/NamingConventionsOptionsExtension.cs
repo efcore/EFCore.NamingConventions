@@ -124,12 +124,15 @@ namespace EFCore.NamingConventions.Internal
                 }
             }
 
-            public override long GetServiceProviderHashCode()
+            public override int GetServiceProviderHashCode()
             {
                 var hashCode = Extension._namingConvention.GetHashCode();
                 hashCode = (hashCode * 3) ^ (Extension._culture?.GetHashCode() ?? 0);
                 return hashCode;
             }
+
+            public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other)
+                => true;
 
             public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
             {

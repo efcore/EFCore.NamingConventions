@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <VersionPrefix>6.0.0-preview.3</VersionPrefix>
+    <VersionPrefix>6.0.0-rc.1</VersionPrefix>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../EFCore.NamingConventions.snk</AssemblyOriginatorKeyFile>
