@@ -9,7 +9,9 @@ using System.Linq;
 using EFCore.NamingConventions.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.EntityFrameworkCore.TestUtilities;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace EFCore.NamingConventions.Test
@@ -407,7 +409,11 @@ namespace EFCore.NamingConventions.Test
 
         private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo culture = null)
         {
-            var conventionSet = SqliteTestHelpers.Instance.CreateConventionSetBuilder().CreateConventionSet();
+            var conventionSet = SqliteTestHelpers
+                .Instance
+                .CreateContextServices()
+                .GetRequiredService<IConventionSetBuilder>()
+                .CreateConventionSet();
 
             var optionsBuilder = new DbContextOptionsBuilder();
             SqliteTestHelpers.Instance.UseProviderOptions(optionsBuilder);
