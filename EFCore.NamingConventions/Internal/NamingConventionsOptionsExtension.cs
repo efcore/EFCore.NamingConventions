@@ -132,7 +132,7 @@ namespace EFCore.NamingConventions.Internal
             }
 
             public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other)
-                => true;
+                => other is ExtensionInfo;
 
             public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
             {
