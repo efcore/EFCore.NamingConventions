@@ -46,6 +46,7 @@ SELECT c.id, c.full_name
 * UseLowerCaseNamingConvention: `FullName` becomes `fullname`
 * UseCamelCaseNamingConvention: `FullName` becomes `fullName`
 * UseUpperCaseNamingConvention: `FullName` becomes `FULLNAME`
+* UseUpperSnakeCaseNamingConvention: `FullName` becomes `FULL_NAME`
 
 Have another naming convention in mind? Open an issue or even submit a PR - it's pretty easy to do!
 
