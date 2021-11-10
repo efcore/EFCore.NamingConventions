@@ -404,6 +404,14 @@ namespace EFCore.NamingConventions.Test
                 .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
         }
 
+        [Fact]
+        public void Not_mapped_to_table()
+        {
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToSqlQuery("SELECT foobar"));
+
+            Assert.Null(entityType.GetTableName());
+        }
+
         private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null)
             => BuildModel(builderAction, culture).GetEntityTypes().Single();
 

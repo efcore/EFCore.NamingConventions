@@ -109,6 +109,16 @@ namespace EFCore.NamingConventions.Internal
         {
             var entityType = entityTypeBuilder.Metadata;
 
+            // If the View/SqlQuery/Function name is being set on the entity type, and its table name is set by convention, then we assume
+            // we're the one who set the table name back when the entity type was originally added. We now undo this as the entity type
+            // should only be mapped to the View/SqlQuery/Function.
+            if (name is RelationalAnnotationNames.ViewName or RelationalAnnotationNames.SqlQuery or RelationalAnnotationNames.FunctionName
+                && annotation.Value is not null
+                && entityType.GetTableNameConfigurationSource() == ConfigurationSource.Convention)
+            {
+                entityType.SetTableName(null);
+            }
+
             if (name != RelationalAnnotationNames.TableName
                 || StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is not StoreObjectIdentifier tableIdentifier)
             {
