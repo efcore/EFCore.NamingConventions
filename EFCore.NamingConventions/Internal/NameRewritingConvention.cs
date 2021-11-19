@@ -79,11 +79,14 @@ namespace EFCore.NamingConventions.Internal
             var foreignKey = relationshipBuilder.Metadata;
             var ownedEntityType = foreignKey.DeclaringEntityType;
 
-            if (foreignKey.IsOwnership && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
+            // An entity type is becoming owned - this is a bit complicated.
+            // Unless it's a collection navigation, or the owned entity table name was explicitly set by the user, this triggers table
+            // splitting, which means we need to undo rewriting which we've done previously.
+            if (foreignKey.IsOwnership
+                && !foreignKey.GetNavigation(false).IsCollection
+                && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
             {
-                // An entity type is becoming owned - this is complicated.
-
-                // Reset the table name which we've set when the entity type was added
+                // Reset the table name which we've set when the entity type was added.
                 // If table splitting was configured by explicitly setting the table name, the following
                 // does nothing.
                 ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
@@ -183,14 +186,7 @@ namespace EFCore.NamingConventions.Internal
             => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
 
         public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
-        {
-            var entityType = keyBuilder.Metadata.DeclaringEntityType;
-
-            if (entityType.FindOwnership() is null)
-            {
-                keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetDefaultName()));
-            }
-        }
+            => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetName()));
 
         public void ProcessIndexAdded(
             IConventionIndexBuilder indexBuilder,
@@ -218,17 +214,21 @@ namespace EFCore.NamingConventions.Internal
                     {
                         var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
                         if (identifier is null)
-                            continue;
-
-                        if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
                         {
-                            columnName = property.GetColumnName(identifier.Value);
-                            if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
-                            {
-                                property.Builder.HasColumnName(
-                                    _namingNameRewriter.RewriteName(entityType.ShortName())
-                                    + columnName.Substring(entityType.ShortName().Length));
-                            }
+                            continue;
+                        }
+
+                        if (property.GetColumnNameConfigurationSource(identifier.Value) != ConfigurationSource.Convention)
+                        {
+                            continue;
+                        }
+
+                        columnName = property.GetColumnName(identifier.Value);
+                        if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
+                        {
+                            property.Builder.HasColumnName(
+                                _namingNameRewriter.RewriteName(entityType.ShortName())
+                                + columnName.Substring(entityType.ShortName().Length));
                         }
                     }
                 }
@@ -254,7 +254,9 @@ namespace EFCore.NamingConventions.Internal
             {
                 var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
                 if (identifier is null)
+                {
                     continue;
+                }
 
                 if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
                 {

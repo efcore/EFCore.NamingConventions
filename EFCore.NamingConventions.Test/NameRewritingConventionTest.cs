@@ -405,6 +405,18 @@ namespace EFCore.NamingConventions.Test
         }
 
         [Fact]
+        public void Owned_entity_withs_OwnsMany()
+        {
+            var model = BuildModel(b => b.Entity<Blog>().OwnsMany(b => b.Posts));
+            var ownedEntityType = model.FindEntityType(typeof(Post));
+
+            Assert.Equal("post", ownedEntityType.GetTableName());
+            Assert.Equal("pk_post", ownedEntityType.FindPrimaryKey().GetName());
+            Assert.Equal("post_title", ownedEntityType.FindProperty("PostTitle")
+                .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+        }
+
+        [Fact]
         public void Not_mapped_to_table()
         {
             var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToSqlQuery("SELECT foobar"));
@@ -451,6 +463,7 @@ namespace EFCore.NamingConventions.Test
             public int PostId { get; set; }
             public Blog Blog { get; set; }
             public int BlogId { get; set; }
+            public string PostTitle { get; set; }
         }
 
         public class Parent
