@@ -75,7 +75,15 @@ namespace EFCore.NamingConventions.Test
         public void Primary_key()
         {
             var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
-            Assert.Equal("pk_sample_entity", entityType.GetKeys().Single(k => k.IsPrimaryKey()).GetName());
+            Assert.Equal("pk_sample_entity", entityType.FindPrimaryKey()!.GetName());
+        }
+
+        [Fact]
+        public void Primary_key_on_table_with_explicit_name()
+        {
+            var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToTable("some_explicit_name"));
+
+            Assert.Equal("pk_some_explicit_name", entityType.FindPrimaryKey()!.GetName());
         }
 
         [Fact]
