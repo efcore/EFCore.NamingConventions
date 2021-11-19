@@ -153,11 +153,50 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
                 .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
-            var parentKey = parentEntityType.FindPrimaryKey();
-            var childKey = childEntityType.FindPrimaryKey();
+            var primaryKey = parentEntityType.FindPrimaryKey();
+            Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
 
-            Assert.Equal("PK_parent", parentKey.GetName());
-            Assert.Equal("PK_parent", childKey.GetName());
+            Assert.Equal("PK_parent", primaryKey.GetName());
+
+            // For the following, see #112
+            var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table).Value;
+            var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table).Value;
+            Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
+            Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
+        }
+
+        [Fact]
+        public void TPT_reversed_configuration()
+        {
+            var model = BuildModel(b =>
+            {
+                b.Entity<Child>().ToTable("child");
+                b.Entity<Parent>().ToTable("parent");
+            });
+
+            var parentEntityType = model.FindEntityType(typeof(Parent));
+            var childEntityType = model.FindEntityType(typeof(Child));
+
+            Assert.Equal("parent", parentEntityType.GetTableName());
+            Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+            Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+
+            Assert.Equal("child", childEntityType.GetTableName());
+            Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+                .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+            var primaryKey = parentEntityType.FindPrimaryKey();
+            Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
+
+            Assert.Equal("PK_parent", primaryKey.GetName());
+
+            // For the following, see #112
+            var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table).Value;
+            var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table).Value;
+            Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
+            Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
         }
 
         [Fact]

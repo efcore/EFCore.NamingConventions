@@ -136,14 +136,27 @@ namespace EFCore.NamingConventions.Internal
                 // However, this isn't yet supported with TPT, see https://github.com/dotnet/efcore/issues/23444.
                 // So we need to check if the entity is within a TPT hierarchy, or is an owned entity within a TPT hierarchy.
 
-                if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null
-                    && (entityType.BaseType is null || entityType.GetTableName() == entityType.BaseType.GetTableName()))
+                var rootType = entityType.GetRootType();
+                var isTPT = rootType.GetDerivedTypes().FirstOrDefault() is { } derivedType
+                    && derivedType.GetTableName() != rootType.GetTableName();
+
+                if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null && !isTPT)
                 {
                     primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
                 }
                 else
                 {
-                    primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                    // This hierarchy is being transformed into TPT via the explicit setting of the table name.
+                    // We not only have to reset our own key name, but also the parents'. Otherwise, the parent's key name
+                    // is used as the child's (see RelationalKeyExtensions.GetName), and we get a "duplicate key name in database" error
+                    // since both parent and child have the same key name;
+                    foreach (var type in entityType.GetRootType().GetDerivedTypesInclusive())
+                    {
+                        if (type.FindPrimaryKey() is IConventionKey pk)
+                        {
+                            pk.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                        }
+                    }
                 }
             }
 
