@@ -39,6 +39,17 @@ SELECT c.id, c.full_name
         FROM customers AS c
         WHERE c.full_name = 'John Doe';
 ```
+If you use `UseInternalServiceProvider` to resolve the services from an external dependency injection container, you also need to add the services required for applying naming conventions in Entity Framework Core:
+
+```c#
+public void ConfigureServices(IServiceCollection services)
+{
+    ...
+    services.AddEntityFrameworkNamingConventions();
+    ...
+}
+```
+In this case, when using multiple DbContexts, a naming convention must be specified to be defined for each context. To use the default naming, use `UseDefaultNamingConvention`.
 
 ## Supported naming conventions
 
@@ -47,6 +58,7 @@ SELECT c.id, c.full_name
 * UseCamelCaseNamingConvention: `FullName` becomes `fullName`
 * UseUpperCaseNamingConvention: `FullName` becomes `FULLNAME`
 * UseUpperSnakeCaseNamingConvention: `FullName` becomes `FULL_NAME`
+* UseDefaultNamingConvention: `FullName` becomes `FullName`
 
 Have another naming convention in mind? Open an issue or even submit a PR - it's pretty easy to do!
 
