@@ -101,7 +101,8 @@ namespace EFCore.NamingConventions.Internal
 
                         builder.Append(Extension._namingConvention switch
                         {
-                            NamingConvention.SnakeCase => "using snake-case naming ",
+                            NamingConvention.None => "using default naming",
+                            NamingConvention.SnakeCase => "using snake-case naming",
                             NamingConvention.LowerCase => "using lower case naming",
                             NamingConvention.UpperCase => "using upper case naming",
                             NamingConvention.UpperSnakeCase => "using upper snake-case naming",

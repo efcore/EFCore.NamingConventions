@@ -102,5 +102,24 @@ namespace Microsoft.EntityFrameworkCore
             [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
             => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+
+        public static DbContextOptionsBuilder UseDefaultNamingConvention(
+            [NotNull] this DbContextOptionsBuilder optionsBuilder)
+        {
+            Check.NotNull(optionsBuilder, nameof(optionsBuilder));
+
+            var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
+                    ?? new NamingConventionsOptionsExtension())
+                .WithoutNaming();
+
+            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+            return optionsBuilder;
+        }
+
+        public static DbContextOptionsBuilder<TContext> UseDefaultNamingConvention<TContext>(
+            [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder)
+            where TContext : DbContext
+            => (DbContextOptionsBuilder<TContext>)UseDefaultNamingConvention((DbContextOptionsBuilder)optionsBuilder);
     }
 }
