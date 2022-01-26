@@ -49,7 +49,6 @@ public void ConfigureServices(IServiceCollection services)
     ...
 }
 ```
-In this case, when using multiple DbContexts, a naming convention must be specified to be defined for each context. To use the default naming, use `UseDefaultNamingConvention`.
 
 ## Supported naming conventions
 
@@ -58,7 +57,6 @@ In this case, when using multiple DbContexts, a naming convention must be specif
 * UseCamelCaseNamingConvention: `FullName` becomes `fullName`
 * UseUpperCaseNamingConvention: `FullName` becomes `FULLNAME`
 * UseUpperSnakeCaseNamingConvention: `FullName` becomes `FULL_NAME`
-* UseDefaultNamingConvention: `FullName` becomes `FullName`
 
 Have another naming convention in mind? Open an issue or even submit a PR - it's pretty easy to do!
 
