@@ -102,6 +102,5 @@ namespace Microsoft.EntityFrameworkCore
             [NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo culture = null)
             where TContext : DbContext
             => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
-
     }
 }
