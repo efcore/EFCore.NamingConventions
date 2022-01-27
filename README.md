@@ -39,16 +39,6 @@ SELECT c.id, c.full_name
         FROM customers AS c
         WHERE c.full_name = 'John Doe';
 ```
-If you use `UseInternalServiceProvider` to resolve the services from an external dependency injection container, you also need to add the services required for applying naming conventions in Entity Framework Core:
-
-```c#
-public void ConfigureServices(IServiceCollection services)
-{
-    ...
-    services.AddEntityFrameworkNamingConventions();
-    ...
-}
-```
 
 ## Supported naming conventions
 
