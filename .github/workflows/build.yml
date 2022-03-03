@@ -28,7 +28,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name == 'push' && startsWith(github.repository, 'efcore/')
-        uses: actions/upload-artifact@v2.3.1
+        uses: actions/upload-artifact@v3
         with:
           name: EFCore.NamingConventions
           path: nupkgs
