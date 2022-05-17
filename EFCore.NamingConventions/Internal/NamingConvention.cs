@@ -1,12 +1,11 @@
-namespace EFCore.NamingConventions.Internal
+namespace EFCore.NamingConventions.Internal;
+
+public enum NamingConvention
 {
-    public enum NamingConvention
-    {
-        None,
-        SnakeCase,
-        LowerCase,
-        CamelCase,
-        UpperCase,
-        UpperSnakeCase
-    }
+    None,
+    SnakeCase,
+    LowerCase,
+    CamelCase,
+    UpperCase,
+    UpperSnakeCase
 }

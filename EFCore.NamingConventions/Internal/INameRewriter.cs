@@ -1,7 +1,6 @@
-namespace EFCore.NamingConventions.Internal
+namespace EFCore.NamingConventions.Internal;
+
+public interface INameRewriter
 {
-    public interface INameRewriter
-    {
-        string RewriteName(string name);
-    }
+    string RewriteName(string name);
 }

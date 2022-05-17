@@ -1,108 +1,107 @@
 using System;
 
 // ReSharper disable once CheckNamespace
-namespace JetBrains.Annotations
+namespace JetBrains.Annotations;
+
+[AttributeUsage(
+    AttributeTargets.Method | AttributeTargets.Parameter |
+    AttributeTargets.Property | AttributeTargets.Delegate |
+    AttributeTargets.Field)]
+internal sealed class NotNullAttribute : Attribute
 {
-    [AttributeUsage(
-        AttributeTargets.Method | AttributeTargets.Parameter |
-        AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field)]
-    internal sealed class NotNullAttribute : Attribute
+}
+
+[AttributeUsage(
+    AttributeTargets.Method | AttributeTargets.Parameter |
+    AttributeTargets.Property | AttributeTargets.Delegate |
+    AttributeTargets.Field)]
+internal sealed class CanBeNullAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class InvokerParameterNameAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class NoEnumerationAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+internal sealed class ContractAnnotationAttribute : Attribute
+{
+    public string Contract { get; }
+
+    public bool ForceFullStates { get; }
+
+    public ContractAnnotationAttribute([NotNull] string contract)
+        : this(contract, false)
     {
     }
 
-    [AttributeUsage(
-        AttributeTargets.Method | AttributeTargets.Parameter |
-        AttributeTargets.Property | AttributeTargets.Delegate |
-        AttributeTargets.Field)]
-    internal sealed class CanBeNullAttribute : Attribute
+    public ContractAnnotationAttribute([NotNull] string contract, bool forceFullStates)
+    {
+        Contract = contract;
+        ForceFullStates = forceFullStates;
+    }
+}
+
+[AttributeUsage(AttributeTargets.All)]
+internal sealed class UsedImplicitlyAttribute : Attribute
+{
+    public UsedImplicitlyAttribute()
+        : this(ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default)
     {
     }
 
-    [AttributeUsage(AttributeTargets.Parameter)]
-    internal sealed class InvokerParameterNameAttribute : Attribute
+    public UsedImplicitlyAttribute(ImplicitUseKindFlags useKindFlags)
+        : this(useKindFlags, ImplicitUseTargetFlags.Default)
     {
     }
 
-    [AttributeUsage(AttributeTargets.Parameter)]
-    internal sealed class NoEnumerationAttribute : Attribute
+    public UsedImplicitlyAttribute(ImplicitUseTargetFlags targetFlags)
+        : this(ImplicitUseKindFlags.Default, targetFlags)
     {
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    internal sealed class ContractAnnotationAttribute : Attribute
+    public UsedImplicitlyAttribute(
+        ImplicitUseKindFlags useKindFlags, ImplicitUseTargetFlags targetFlags)
     {
-        public string Contract { get; }
-
-        public bool ForceFullStates { get; }
-
-        public ContractAnnotationAttribute([NotNull] string contract)
-            : this(contract, false)
-        {
-        }
-
-        public ContractAnnotationAttribute([NotNull] string contract, bool forceFullStates)
-        {
-            Contract = contract;
-            ForceFullStates = forceFullStates;
-        }
+        UseKindFlags = useKindFlags;
+        TargetFlags = targetFlags;
     }
 
-    [AttributeUsage(AttributeTargets.All)]
-    internal sealed class UsedImplicitlyAttribute : Attribute
-    {
-        public UsedImplicitlyAttribute()
-            : this(ImplicitUseKindFlags.Default, ImplicitUseTargetFlags.Default)
-        {
-        }
+    public ImplicitUseKindFlags UseKindFlags { get; }
+    public ImplicitUseTargetFlags TargetFlags { get; }
+}
 
-        public UsedImplicitlyAttribute(ImplicitUseKindFlags useKindFlags)
-            : this(useKindFlags, ImplicitUseTargetFlags.Default)
-        {
-        }
+[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Delegate)]
+internal sealed class StringFormatMethodAttribute : Attribute
+{
+    public StringFormatMethodAttribute([NotNull] string formatParameterName)
+        => FormatParameterName = formatParameterName;
 
-        public UsedImplicitlyAttribute(ImplicitUseTargetFlags targetFlags)
-            : this(ImplicitUseKindFlags.Default, targetFlags)
-        {
-        }
+    [NotNull]
+    public string FormatParameterName { get; }
+}
 
-        public UsedImplicitlyAttribute(
-            ImplicitUseKindFlags useKindFlags, ImplicitUseTargetFlags targetFlags)
-        {
-            UseKindFlags = useKindFlags;
-            TargetFlags = targetFlags;
-        }
+[Flags]
+internal enum ImplicitUseKindFlags
+{
+    Default = Access | Assign | InstantiatedWithFixedConstructorSignature,
+    Access = 1,
+    Assign = 2,
+    InstantiatedWithFixedConstructorSignature = 4,
+    InstantiatedNoFixedConstructorSignature = 8
+}
 
-        public ImplicitUseKindFlags UseKindFlags { get; }
-        public ImplicitUseTargetFlags TargetFlags { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Delegate)]
-    internal sealed class StringFormatMethodAttribute : Attribute
-    {
-        public StringFormatMethodAttribute([NotNull] string formatParameterName)
-            => FormatParameterName = formatParameterName;
-
-        [NotNull]
-        public string FormatParameterName { get; }
-    }
-
-    [Flags]
-    internal enum ImplicitUseKindFlags
-    {
-        Default = Access | Assign | InstantiatedWithFixedConstructorSignature,
-        Access = 1,
-        Assign = 2,
-        InstantiatedWithFixedConstructorSignature = 4,
-        InstantiatedNoFixedConstructorSignature = 8
-    }
-
-    [Flags]
-    internal enum ImplicitUseTargetFlags
-    {
-        Default = Itself,
-        Itself = 1,
-        Members = 2,
-        WithMembers = Itself | Members
-    }
+[Flags]
+internal enum ImplicitUseTargetFlags
+{
+    Default = Itself,
+    Itself = 1,
+    Members = 2,
+    WithMembers = Itself | Members
 }
