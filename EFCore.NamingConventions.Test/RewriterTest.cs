@@ -7,27 +7,22 @@ namespace EFCore.NamingConventions.Test;
 public class RewriterTest
 {
     [Fact]
-    public void SnakeCase()
-        => Assert.Equal("full_name",
-            new SnakeCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    public void Snake_case()
+        => Assert.Equal("full_name", new SnakeCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 
     [Fact]
-    public void UpperSnakeCase()
-        => Assert.Equal("FULL_NAME",
-            new UpperSnakeCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    public void Upper_snake_case()
+        => Assert.Equal("FULL_NAME", new UpperSnakeCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 
     [Fact]
-    public void LowerCase()
-        => Assert.Equal("fullname",
-            new LowerCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    public void Lower_case()
+        => Assert.Equal("fullname", new LowerCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 
     [Fact]
-    public void CamelCase()
-        => Assert.Equal("fullName",
-            new CamelCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    public void Camel_case()
+        => Assert.Equal("fullName", new CamelCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 
     [Fact]
-    public void UpperCase()
-        => Assert.Equal("FULLNAME",
-            new UpperCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    public void Upper_case()
+        => Assert.Equal("FULLNAME", new UpperCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
 }

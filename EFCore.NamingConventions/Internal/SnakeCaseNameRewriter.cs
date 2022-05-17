@@ -8,7 +8,8 @@ public class SnakeCaseNameRewriter : INameRewriter
 {
     private readonly CultureInfo _culture;
 
-    public SnakeCaseNameRewriter(CultureInfo culture) => _culture = culture;
+    public SnakeCaseNameRewriter(CultureInfo culture)
+        => _culture = culture;
 
     public virtual string RewriteName(string name)
     {
