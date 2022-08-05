@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -14,6 +15,7 @@ public class NameRewritingConvention :
     IForeignKeyOwnershipChangedConvention,
     IKeyAddedConvention,
     IForeignKeyAddedConvention,
+    IForeignKeyPropertiesChangedConvention,
     IIndexAddedConvention,
     IEntityTypeBaseTypeChangedConvention,
     IModelFinalizingConvention
@@ -196,6 +198,13 @@ public class NameRewritingConvention :
     public void ProcessForeignKeyAdded(
         IConventionForeignKeyBuilder relationshipBuilder,
         IConventionContext<IConventionForeignKeyBuilder> context)
+        => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
+
+    public void ProcessForeignKeyPropertiesChanged(
+        IConventionForeignKeyBuilder relationshipBuilder,
+        IReadOnlyList<IConventionProperty> oldDependentProperties,
+        IConventionKey oldPrincipalKey,
+        IConventionContext<IReadOnlyList<IConventionProperty>> context)
         => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
 
     public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
