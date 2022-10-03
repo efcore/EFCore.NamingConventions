@@ -216,11 +216,11 @@ public class NameRewritingConvention :
         {
             foreach (var property in entityType.GetProperties())
             {
-                var columnName = property.GetColumnBaseName();
+                var columnName = property.GetColumnName();
                 if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
                 {
                     property.Builder.HasColumnName(
-                        _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName.Substring(entityType.ShortName().Length));
+                        _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName[entityType.ShortName().Length..]);
                 }
 
                 foreach (var storeObjectType in _storeObjectTypes)
@@ -241,7 +241,7 @@ public class NameRewritingConvention :
                     {
                         property.Builder.HasColumnName(
                             _namingNameRewriter.RewriteName(entityType.ShortName())
-                            + columnName.Substring(entityType.ShortName().Length));
+                            + columnName[entityType.ShortName().Length..]);
                     }
                 }
             }
@@ -260,7 +260,7 @@ public class NameRewritingConvention :
         // but https://github.com/dotnet/efcore/pull/23834
         var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
             ? property.GetDefaultColumnName(tableIdentifier)
-            : property.GetDefaultColumnBaseName();
+            : property.GetDefaultColumnName();
         propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
 
         foreach (var storeObjectType in _storeObjectTypes)
