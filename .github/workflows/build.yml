@@ -4,16 +4,14 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3.0.2
-        with:
-          dotnet-version: '6.0.100-rc.1.21463.6'
+        uses: actions/setup-dotnet@v3
 
       - name: Test
         run: dotnet test

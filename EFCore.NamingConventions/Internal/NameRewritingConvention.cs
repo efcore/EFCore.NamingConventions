@@ -216,32 +216,40 @@ public class NameRewritingConvention :
         {
             foreach (var property in entityType.GetProperties())
             {
-                var columnName = property.GetColumnBaseName();
+                var columnName = property.GetColumnName();
                 if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
                 {
                     property.Builder.HasColumnName(
                         _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName.Substring(entityType.ShortName().Length));
                 }
 
-                foreach (var storeObjectType in _storeObjectTypes)
+                var storeObject = StoreObjectIdentifier.Create(entityType, StoreObjectType.Table);
+                if (storeObject is null)
                 {
-                    var identifier = StoreObjectIdentifier.Create(entityType, storeObjectType);
-                    if (identifier is null)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    if (property.GetColumnNameConfigurationSource(identifier.Value) != ConfigurationSource.Convention)
-                    {
-                        continue;
-                    }
+                var shortName = entityType.ShortName();
 
-                    columnName = property.GetColumnName(identifier.Value);
-                    if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
+                if (property.Builder.CanSetColumnName(null))
+                {
+                    columnName = property.GetColumnName();
+                    if (columnName.StartsWith(shortName + '_', StringComparison.Ordinal))
                     {
                         property.Builder.HasColumnName(
-                            _namingNameRewriter.RewriteName(entityType.ShortName())
-                            + columnName.Substring(entityType.ShortName().Length));
+                            _namingNameRewriter.RewriteName(shortName)
+                            + columnName.Substring(shortName.Length));
+                    }
+                }
+
+                if (property.Builder.CanSetColumnName(null, storeObject.Value))
+                {
+                    columnName = property.GetColumnName(storeObject.Value);
+                    if (columnName is not null && columnName.StartsWith(shortName + '_', StringComparison.Ordinal))
+                    {
+                        property.Builder.HasColumnName(
+                            _namingNameRewriter.RewriteName(shortName) + columnName.Substring(shortName.Length),
+                            storeObject.Value);
                     }
                 }
             }
@@ -260,7 +268,7 @@ public class NameRewritingConvention :
         // but https://github.com/dotnet/efcore/pull/23834
         var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
             ? property.GetDefaultColumnName(tableIdentifier)
-            : property.GetDefaultColumnBaseName();
+            : property.GetDefaultColumnName();
         propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
 
         foreach (var storeObjectType in _storeObjectTypes)

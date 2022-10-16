@@ -9,6 +9,7 @@ ProjectSection(SolutionItems) = preProject
 	Directory.Build.props = Directory.Build.props
 	.github\workflows\build.yml = .github\workflows\build.yml
 	Directory.Packages.props = Directory.Packages.props
+	global.json = global.json
 EndProjectSection
 EndProject
 Global
