@@ -1,6 +1,6 @@
 ﻿<Project>
   <PropertyGroup>
-    <EFCoreVersion>7.0.0-rc.2.22472.11</EFCoreVersion>
+    <EFCoreVersion>7.0.0</EFCoreVersion>
     <MicrosoftExtensionsVersion>7.0.0-rc.2.22472.3</MicrosoftExtensionsVersion>
   </PropertyGroup>
 
