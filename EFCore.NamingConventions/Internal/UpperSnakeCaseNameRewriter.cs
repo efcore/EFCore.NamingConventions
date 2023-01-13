@@ -10,5 +10,9 @@ public class UpperSnakeCaseNameRewriter : SnakeCaseNameRewriter
         => _culture = culture;
 
     public override string RewriteName(string name)
-        => base.RewriteName(name).ToUpper(_culture);
+    {
+        var snakeCaseName = base.RewriteName(name);
+
+        return string.IsNullOrEmpty(snakeCaseName) ? snakeCaseName : snakeCaseName.ToUpper(_culture);
+    }
 }

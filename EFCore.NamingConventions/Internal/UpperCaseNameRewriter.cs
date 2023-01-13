@@ -10,5 +10,5 @@ public class UpperCaseNameRewriter : INameRewriter
         => _culture = culture;
 
     public string RewriteName(string name)
-        => name.ToUpper(_culture);
+        => string.IsNullOrEmpty(name) ? name : name.ToUpper(_culture);
 }

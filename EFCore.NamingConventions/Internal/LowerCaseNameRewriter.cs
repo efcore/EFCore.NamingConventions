@@ -10,5 +10,5 @@ public class LowerCaseNameRewriter : INameRewriter
         => _culture = culture;
 
     public string RewriteName(string name)
-        => name.ToLower(_culture);
+        => string.IsNullOrEmpty(name) ? name : name.ToLower(_culture);
 }
