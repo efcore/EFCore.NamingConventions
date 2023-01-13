@@ -468,6 +468,24 @@ public class NameRewritingConventionTest
         Assert.Null(entityType.GetTableName());
     }
 
+    [Fact]
+    public void Foreign_key_without_name_because_over_view()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<Blog>();
+            b.Entity<Post>().ToView("posts_view");
+            b.Entity<Post>().HasOne(x => x.Blog).WithMany().HasForeignKey(x => x.BlogId);
+        });
+
+        var postEntityType = model.FindEntityType(typeof(Post))!;
+        Assert.Null(postEntityType.GetTableName());
+        Assert.Collection(
+            postEntityType.GetForeignKeys().Select(fk => fk.GetConstraintName()),
+            Assert.Null,
+            Assert.Null);
+    }
+
     private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null)
         => BuildModel(builderAction, culture).GetEntityTypes().Single();
 

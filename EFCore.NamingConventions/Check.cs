@@ -12,7 +12,7 @@ namespace Microsoft.EntityFrameworkCore;
 internal static class Check
 {
     [ContractAnnotation("value:null => halt")]
-    public static T NotNull<T>([NoEnumeration] T value, [InvokerParameterName] [NotNull] string parameterName)
+    public static T NotNull<T>([NoEnumeration] T value, [InvokerParameterName] string parameterName)
     {
         if (ReferenceEquals(value, null))
         {
@@ -27,8 +27,8 @@ internal static class Check
     [ContractAnnotation("value:null => halt")]
     public static T NotNull<T>(
         [NoEnumeration] T value,
-        [InvokerParameterName] [NotNull] string parameterName,
-        [NotNull] string propertyName)
+        [InvokerParameterName] string parameterName,
+        string propertyName)
     {
         if (ReferenceEquals(value, null))
         {
@@ -42,7 +42,7 @@ internal static class Check
     }
 
     [ContractAnnotation("value:null => halt")]
-    public static IReadOnlyList<T> NotEmpty<T>(IReadOnlyList<T> value, [InvokerParameterName] [NotNull] string parameterName)
+    public static IReadOnlyList<T> NotEmpty<T>(IReadOnlyList<T> value, [InvokerParameterName] string parameterName)
     {
         NotNull(value, parameterName);
 
@@ -57,32 +57,16 @@ internal static class Check
     }
 
     [ContractAnnotation("value:null => halt")]
-    public static string NotEmpty(string value, [InvokerParameterName] [NotNull] string parameterName)
+    public static string NotEmpty(string? value, [InvokerParameterName] string parameterName)
     {
-        Exception e = null;
-        if (ReferenceEquals(value, null))
-        {
-            e = new ArgumentNullException(parameterName);
-        }
-        else if (value.Trim().Length == 0)
-        {
-            e = new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName));
-        }
-
-        if (e != null)
+        if (value is null)
         {
             NotEmpty(parameterName, nameof(parameterName));
 
-            throw e;
+            throw new ArgumentNullException(parameterName);
         }
 
-        return value;
-    }
-
-    public static string NullButNotEmpty([CanBeNull] string value, [InvokerParameterName] [NotNull] string parameterName)
-    {
-        if (!ReferenceEquals(value, null)
-            && (value.Length == 0))
+        if (value.Trim().Length == 0)
         {
             NotEmpty(parameterName, nameof(parameterName));
 
@@ -92,7 +76,19 @@ internal static class Check
         return value;
     }
 
-    public static IReadOnlyList<T> HasNoNulls<T>(IReadOnlyList<T> value, [InvokerParameterName] [NotNull] string parameterName)
+    public static string? NullButNotEmpty(string? value, [InvokerParameterName] string parameterName)
+    {
+        if (value is not null && value.Length == 0)
+        {
+            NotEmpty(parameterName, nameof(parameterName));
+
+            throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName));
+        }
+
+        return value;
+    }
+
+    public static IReadOnlyList<T> HasNoNulls<T>(IReadOnlyList<T> value, [InvokerParameterName] string parameterName)
         where T : class
     {
         NotNull(value, parameterName);
