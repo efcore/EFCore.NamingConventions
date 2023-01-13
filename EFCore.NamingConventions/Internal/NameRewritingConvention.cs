@@ -36,19 +36,23 @@ public class NameRewritingConvention :
         // (see ProcessEntityTypeBaseTypeChanged). But we still have this check for safety.
         if (entityType.BaseType is null)
         {
-            entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(entityType.GetTableName()), entityType.GetSchema());
-
-            if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention)
+            if (entityType.GetTableName() is { } tableName)
             {
-                entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(entityType.GetViewName()), entityType.GetViewSchema());
+                entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
+            }
+
+            if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention
+                && entityType.GetViewName() is { } viewName)
+            {
+                entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(viewName), entityType.GetViewSchema());
             }
         }
     }
 
     public void ProcessEntityTypeBaseTypeChanged(
         IConventionEntityTypeBuilder entityTypeBuilder,
-        IConventionEntityType newBaseType,
-        IConventionEntityType oldBaseType,
+        IConventionEntityType? newBaseType,
+        IConventionEntityType? oldBaseType,
         IConventionContext<IConventionEntityType> context)
     {
         var entityType = entityTypeBuilder.Metadata;
@@ -56,7 +60,10 @@ public class NameRewritingConvention :
         if (newBaseType is null)
         {
             // The entity is getting removed from a hierarchy. Set the (rewritten) TableName.
-            entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(entityType.GetTableName()), entityType.GetSchema());
+            if (entityType.GetTableName() is { } tableName)
+            {
+                entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
+            }
         }
         else
         {
@@ -83,7 +90,7 @@ public class NameRewritingConvention :
         // Unless it's a collection navigation, or the owned entity table name was explicitly set by the user, this triggers table
         // splitting, which means we need to undo rewriting which we've done previously.
         if (foreignKey.IsOwnership
-            && !foreignKey.GetNavigation(false).IsCollection
+            && !foreignKey.GetNavigation(false)!.IsCollection
             && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
         {
             // Reset the table name which we've set when the entity type was added.
@@ -106,8 +113,8 @@ public class NameRewritingConvention :
     public void ProcessEntityTypeAnnotationChanged(
         IConventionEntityTypeBuilder entityTypeBuilder,
         string name,
-        IConventionAnnotation annotation,
-        IConventionAnnotation oldAnnotation,
+        IConventionAnnotation? annotation,
+        IConventionAnnotation? oldAnnotation,
         IConventionContext<IConventionAnnotation> context)
     {
         var entityType = entityTypeBuilder.Metadata;
@@ -116,7 +123,7 @@ public class NameRewritingConvention :
         // we're the one who set the table name back when the entity type was originally added. We now undo this as the entity type
         // should only be mapped to the View/SqlQuery/Function.
         if (name is RelationalAnnotationNames.ViewName or RelationalAnnotationNames.SqlQuery or RelationalAnnotationNames.FunctionName
-            && annotation.Value is not null
+            && annotation?.Value is not null
             && entityType.GetTableNameConfigurationSource() == ConfigurationSource.Convention)
         {
             entityType.SetTableName(null);
@@ -142,7 +149,10 @@ public class NameRewritingConvention :
 
             if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null && !isTPT)
             {
-                primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKey.GetDefaultName()));
+                if (primaryKey.GetDefaultName() is { } primaryKeyName)
+                {
+                    primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKeyName));
+                }
             }
             else
             {
@@ -162,12 +172,18 @@ public class NameRewritingConvention :
 
         foreach (var foreignKey in entityType.GetForeignKeys())
         {
-            foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKey.GetDefaultName()));
+            if (foreignKey.GetDefaultName() is { } foreignKeyName)
+            {
+                foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKeyName));
+            }
         }
 
         foreach (var index in entityType.GetIndexes())
         {
-            index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(index.GetDefaultDatabaseName()));
+            if (index.GetDefaultDatabaseName() is { } indexName)
+            {
+                index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
+            }
         }
 
         if (annotation?.Value is not null
@@ -178,7 +194,7 @@ public class NameRewritingConvention :
 
             // When the entity became owned, we prefixed all of its properties - we must now undo that.
             foreach (var property in entityType.GetProperties()
-                         .Except(entityType.FindPrimaryKey().Properties)
+                         .Except(entityType.FindPrimaryKey()?.Properties ?? Array.Empty<IConventionProperty>())
                          .Where(p => p.Builder.CanSetColumnName(null)))
             {
                 RewriteColumnName(property.Builder);
@@ -186,9 +202,10 @@ public class NameRewritingConvention :
 
             // We previously rewrote the owned entity's primary key name, when the owned entity was still in table splitting.
             // Now that its getting its own table, rewrite the primary key constraint name again.
-            if (entityType.FindPrimaryKey() is IConventionKey key)
+            if (entityType.FindPrimaryKey() is IConventionKey key
+                && key.GetDefaultName() is { } keyName)
             {
-                key.Builder.HasName(_namingNameRewriter.RewriteName(key.GetDefaultName()));
+                key.Builder.HasName(_namingNameRewriter.RewriteName(keyName));
             }
         }
     }
@@ -196,15 +213,30 @@ public class NameRewritingConvention :
     public void ProcessForeignKeyAdded(
         IConventionForeignKeyBuilder relationshipBuilder,
         IConventionContext<IConventionForeignKeyBuilder> context)
-        => relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(relationshipBuilder.Metadata.GetDefaultName()));
+    {
+        if (relationshipBuilder.Metadata.GetDefaultName() is { } constraintName)
+        {
+            relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(constraintName));
+        }
+    }
 
     public void ProcessKeyAdded(IConventionKeyBuilder keyBuilder, IConventionContext<IConventionKeyBuilder> context)
-        => keyBuilder.HasName(_namingNameRewriter.RewriteName(keyBuilder.Metadata.GetName()));
+    {
+        if (keyBuilder.Metadata.GetName() is { } keyName)
+        {
+            keyBuilder.HasName(_namingNameRewriter.RewriteName(keyName));
+        }
+    }
 
     public void ProcessIndexAdded(
         IConventionIndexBuilder indexBuilder,
         IConventionContext<IConventionIndexBuilder> context)
-        => indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexBuilder.Metadata.GetDefaultDatabaseName()));
+    {
+        if (indexBuilder.Metadata.GetDefaultDatabaseName() is { } indexName)
+        {
+            indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
+        }
+    }
 
     /// <summary>
     /// EF Core's <see cref="SharedTableConvention" /> runs at model finalization time, and adds entity type prefixes to
@@ -269,7 +301,10 @@ public class NameRewritingConvention :
         var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
             ? property.GetDefaultColumnName(tableIdentifier)
             : property.GetDefaultColumnName();
-        propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
+        if (baseColumnName is not null)
+        {
+            propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(baseColumnName));
+        }
 
         foreach (var storeObjectType in _storeObjectTypes)
         {
@@ -279,10 +314,10 @@ public class NameRewritingConvention :
                 continue;
             }
 
-            if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention)
+            if (property.GetColumnNameConfigurationSource(identifier.Value) == ConfigurationSource.Convention
+                && property.GetColumnName(identifier.Value) is { } columnName)
             {
-                propertyBuilder.HasColumnName(
-                    _namingNameRewriter.RewriteName(property.GetColumnName(identifier.Value)), identifier.Value);
+                propertyBuilder.HasColumnName(_namingNameRewriter.RewriteName(columnName), identifier.Value);
             }
         }
     }

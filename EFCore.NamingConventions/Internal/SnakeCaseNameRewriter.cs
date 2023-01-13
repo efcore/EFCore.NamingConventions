@@ -13,11 +13,6 @@ public class SnakeCaseNameRewriter : INameRewriter
 
     public virtual string RewriteName(string name)
     {
-        if (string.IsNullOrEmpty(name))
-        {
-            return name;
-        }
-
         var builder = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
         var previousCategory = default(UnicodeCategory?);
 

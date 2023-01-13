@@ -4,18 +4,17 @@ using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using JetBrains.Annotations;
 
 namespace EFCore.NamingConventions.Internal;
 
 public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
 {
-    private DbContextOptionsExtensionInfo _info;
+    private DbContextOptionsExtensionInfo? _info;
     private NamingConvention _namingConvention;
-    private CultureInfo _culture;
+    private CultureInfo? _culture;
 
     public NamingConventionsOptionsExtension() {}
-    protected NamingConventionsOptionsExtension([NotNull] NamingConventionsOptionsExtension copyFrom)
+    protected NamingConventionsOptionsExtension(NamingConventionsOptionsExtension copyFrom)
     {
         _namingConvention = copyFrom._namingConvention;
         _culture = copyFrom._culture;
@@ -26,7 +25,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     protected virtual NamingConventionsOptionsExtension Clone() => new(this);
 
     internal virtual NamingConvention NamingConvention => _namingConvention;
-    internal virtual CultureInfo Culture => _culture;
+    internal virtual CultureInfo? Culture => _culture;
 
     public virtual NamingConventionsOptionsExtension WithoutNaming()
     {
@@ -35,7 +34,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention(CultureInfo culture = null)
+    public virtual NamingConventionsOptionsExtension WithSnakeCaseNamingConvention(CultureInfo? culture = null)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.SnakeCase;
@@ -43,7 +42,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention(CultureInfo culture = null)
+    public virtual NamingConventionsOptionsExtension WithLowerCaseNamingConvention(CultureInfo? culture = null)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.LowerCase;
@@ -51,7 +50,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention(CultureInfo culture = null)
+    public virtual NamingConventionsOptionsExtension WithUpperCaseNamingConvention(CultureInfo? culture = null)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperCase;
@@ -59,7 +58,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithUpperSnakeCaseNamingConvention(CultureInfo culture = null)
+    public virtual NamingConventionsOptionsExtension WithUpperSnakeCaseNamingConvention(CultureInfo? culture = null)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperSnakeCase;
@@ -67,7 +66,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public virtual NamingConventionsOptionsExtension WithCamelCaseNamingConvention(CultureInfo culture = null)
+    public virtual NamingConventionsOptionsExtension WithCamelCaseNamingConvention(CultureInfo? culture = null)
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.CamelCase;
@@ -82,7 +81,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
 
     private sealed class ExtensionInfo : DbContextOptionsExtensionInfo
     {
-        private string _logFragment;
+        private string? _logFragment;
 
         public ExtensionInfo(IDbContextOptionsExtension extension) : base(extension) {}
 

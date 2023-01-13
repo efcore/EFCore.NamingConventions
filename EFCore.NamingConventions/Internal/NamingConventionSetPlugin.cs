@@ -10,11 +10,11 @@ namespace EFCore.NamingConventions.Internal;
 public class NamingConventionSetPlugin : IConventionSetPlugin
 {
     private readonly IDbContextOptions _options;
-    public NamingConventionSetPlugin([NotNull] IDbContextOptions options) => _options = options;
+    public NamingConventionSetPlugin(IDbContextOptions options) => _options = options;
 
     public ConventionSet ModifyConventions(ConventionSet conventionSet)
     {
-        var extension = _options.FindExtension<NamingConventionsOptionsExtension>();
+        var extension = _options.FindExtension<NamingConventionsOptionsExtension>()!;
         var namingStyle = extension.NamingConvention;
         var culture = extension.Culture;
         if (namingStyle == NamingConvention.None)
