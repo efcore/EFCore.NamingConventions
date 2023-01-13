@@ -26,7 +26,7 @@ public class NameRewritingConventionTest
     public void Column()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
-        Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+        Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))!
             .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
     }
 
@@ -36,7 +36,7 @@ public class NameRewritingConventionTest
         var entityType = BuildEntityType(
             b => b.Entity<SampleEntity>(),
             CultureInfo.CreateSpecificCulture("tr-TR"));
-        Assert.Equal("sample_entity_ıd", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+        Assert.Equal("sample_entity_ıd", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))!
             .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
     }
 
@@ -46,7 +46,7 @@ public class NameRewritingConventionTest
         var entityType = BuildEntityType(
             b => b.Entity<SampleEntity>(),
             CultureInfo.InvariantCulture);
-        Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+        Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))!
             .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
     }
 
@@ -63,7 +63,7 @@ public class NameRewritingConventionTest
 
         foreach (var type in new[] { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function })
         {
-            Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))
+            Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))!
                 .GetColumnName(StoreObjectIdentifier.Create(entityType, type)!.Value));
         }
     }
@@ -100,7 +100,7 @@ public class NameRewritingConventionTest
     public void Foreign_key()
     {
         var model = BuildModel(b => b.Entity<Blog>());
-        var entityType = model.FindEntityType(typeof(Post));
+        var entityType = model.FindEntityType(typeof(Post))!;
         Assert.Equal("fk_post_blog_blog_id", entityType.GetForeignKeys().Single().GetConstraintName());
     }
 
@@ -120,17 +120,17 @@ public class NameRewritingConventionTest
             b.Entity<Child>();
         });
 
-        var parentEntityType = model.FindEntityType(typeof(Parent));
-        var childEntityType = model.FindEntityType(typeof(Child));
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(Child))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("parent", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
@@ -145,27 +145,27 @@ public class NameRewritingConventionTest
             b.Entity<Child>().ToTable("child");
         });
 
-        var parentEntityType = model.FindEntityType(typeof(Parent));
-        var childEntityType = model.FindEntityType(typeof(Child));
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(Child))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
-        var primaryKey = parentEntityType.FindPrimaryKey();
+        var primaryKey = parentEntityType.FindPrimaryKey()!;
         Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
 
         Assert.Equal("PK_parent", primaryKey.GetName());
 
         // For the following, see #112
-        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table).Value;
-        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table).Value;
+        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
+        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
         Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
     }
@@ -179,27 +179,27 @@ public class NameRewritingConventionTest
             b.Entity<Parent>().ToTable("parent");
         });
 
-        var parentEntityType = model.FindEntityType(typeof(Parent));
-        var childEntityType = model.FindEntityType(typeof(Child));
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(Child))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
-        var primaryKey = parentEntityType.FindPrimaryKey();
+        var primaryKey = parentEntityType.FindPrimaryKey()!;
         Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
 
         Assert.Equal("PK_parent", primaryKey.GetName());
 
         // For the following, see #112
-        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table).Value;
-        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table).Value;
+        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
+        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
         Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
     }
@@ -213,24 +213,24 @@ public class NameRewritingConventionTest
             b.Entity<ChildWithOwned>().OwnsOne(c => c.Owned);
         });
 
-        var parentEntityType = model.FindEntityType(typeof(Parent));
-        var childEntityType = model.FindEntityType(typeof(ChildWithOwned));
-        var ownedEntityType = model.FindEntityType(typeof(Owned));
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(ChildWithOwned))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("parent", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
 
         Assert.Equal("parent", ownedEntityType.GetTableName());
-        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))
+        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
     }
 
@@ -248,29 +248,100 @@ public class NameRewritingConventionTest
                 });
         });
 
-        var parentEntityType = model.FindEntityType(typeof(Parent));
-        var childEntityType = model.FindEntityType(typeof(ChildWithOwned));
-        var ownedEntityType = model.FindEntityType(typeof(Owned));
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(ChildWithOwned))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildWithOwned.ChildProperty))
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildWithOwned.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
-        var parentKey = parentEntityType.FindPrimaryKey();
-        var childKey = childEntityType.FindPrimaryKey();
+        var parentKey = parentEntityType.FindPrimaryKey()!;
+        var childKey = childEntityType.FindPrimaryKey()!;
 
         Assert.Equal("PK_parent", parentKey.GetName());
         Assert.Equal("PK_parent", childKey.GetName());
 
         Assert.Equal("child", ownedEntityType.GetTableName());
-        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))
+        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
+    public void TPC()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<Parent>().UseTpcMappingStrategy();
+            b.Entity<Child>();
+        });
+
+        var parentEntityType = model.FindEntityType(typeof(Parent))!;
+        var childEntityType = model.FindEntityType(typeof(Child))!;
+
+        Assert.Equal("parent", parentEntityType.GetTableName());
+        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+
+        Assert.Equal("child", childEntityType.GetTableName());
+        Assert.Equal("id", childEntityType.FindProperty(nameof(Parent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", childEntityType.FindProperty(nameof(Parent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+        var primaryKey = parentEntityType.FindPrimaryKey()!;
+        Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
+
+        Assert.Equal("PK_parent", primaryKey.GetName());
+
+        // For the following, see #112
+        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
+        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
+        Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
+        Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
+    }
+
+    [Fact]
+    public void TPC_with_abstract_parent()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<AbstractParent>().UseTpcMappingStrategy();
+            b.Entity<ChildOfAbstract>();
+        });
+
+        var parentEntityType = model.FindEntityType(typeof(AbstractParent))!;
+        var childEntityType = model.FindEntityType(typeof(ChildOfAbstract))!;
+
+        Assert.Null(parentEntityType.GetTableName());
+        Assert.Null(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table));
+
+        Assert.Equal("child_of_abstract", childEntityType.GetTableName());
+        Assert.Equal("id", childEntityType.FindProperty(nameof(AbstractParent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", childEntityType.FindProperty(nameof(AbstractParent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildOfAbstract.ChildProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+        var primaryKey = parentEntityType.FindPrimaryKey()!;
+        Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
+
+        Assert.Null(primaryKey.GetName());
+
+        // For the following, see #112
+        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
+        Assert.Equal("PK_child_of_abstract", primaryKey.GetName(childStoreObjectIdentifier));
     }
 
     [Fact]
@@ -288,25 +359,25 @@ public class NameRewritingConventionTest
             b.Entity<Split2>().ToTable("split_table");
         });
 
-        var split1EntityType = model.FindEntityType(typeof(Split1));
-        var split2EntityType = model.FindEntityType(typeof(Split2));
+        var split1EntityType = model.FindEntityType(typeof(Split1))!;
+        var split2EntityType = model.FindEntityType(typeof(Split2))!;
 
         var table = StoreObjectIdentifier.Create(split1EntityType, StoreObjectType.Table)!.Value;
         Assert.Equal(table, StoreObjectIdentifier.Create(split2EntityType, StoreObjectType.Table));
 
         Assert.Equal("split_table", split1EntityType.GetTableName());
-        Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp)).GetColumnName(table));
+        Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp))!.GetColumnName(table));
 
         Assert.Equal("split_table", split2EntityType.GetTableName());
-        Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp)).GetColumnName(table));
+        Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp))!.GetColumnName(table));
 
-        Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common)).GetColumnName(table));
-        Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common)).GetColumnName(table));
+        Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common))!.GetColumnName(table));
+        Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common))!.GetColumnName(table));
 
         var foreignKey = split2EntityType.GetForeignKeys().Single();
         Assert.Same(split1EntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
-        Assert.Same(split2EntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
-        Assert.Equal(split1EntityType.FindPrimaryKey().GetName(), split2EntityType.FindPrimaryKey().GetName());
+        Assert.Same(split2EntityType.FindPrimaryKey()!.Properties.Single(), foreignKey.Properties.Single());
+        Assert.Equal(split1EntityType.FindPrimaryKey()!.GetName(), split2EntityType.FindPrimaryKey()!.GetName());
         Assert.Equal(
             foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
             foreignKey.Properties.Single().GetColumnName(table));
@@ -323,25 +394,25 @@ public class NameRewritingConventionTest
             b.Entity<Split1>().ToTable("split_table");
         });
 
-        var split1EntityType = model.FindEntityType(typeof(Split1));
-        var split2EntityType = model.FindEntityType(typeof(Split2));
+        var split1EntityType = model.FindEntityType(typeof(Split1))!;
+        var split2EntityType = model.FindEntityType(typeof(Split2))!;
 
         var table = StoreObjectIdentifier.Create(split1EntityType, StoreObjectType.Table)!.Value;
         Assert.Equal(table, StoreObjectIdentifier.Create(split2EntityType, StoreObjectType.Table));
 
         Assert.Equal("split_table", split1EntityType.GetTableName());
-        Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp)).GetColumnName(table));
+        Assert.Equal("one_prop", split1EntityType.FindProperty(nameof(Split1.OneProp))!.GetColumnName(table));
 
         Assert.Equal("split_table", split2EntityType.GetTableName());
-        Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp)).GetColumnName(table));
+        Assert.Equal("two_prop", split2EntityType.FindProperty(nameof(Split2.TwoProp))!.GetColumnName(table));
 
-        Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common)).GetColumnName(table));
-        Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common)).GetColumnName(table));
+        Assert.Equal("common", split1EntityType.FindProperty(nameof(Split1.Common))!.GetColumnName(table));
+        Assert.Equal("split2_common", split2EntityType.FindProperty(nameof(Split2.Common))!.GetColumnName(table));
 
         var foreignKey = split2EntityType.GetForeignKeys().Single();
         Assert.Same(split1EntityType.FindPrimaryKey(), foreignKey.PrincipalKey);
-        Assert.Same(split2EntityType.FindPrimaryKey().Properties.Single(), foreignKey.Properties.Single());
-        Assert.Equal(split1EntityType.FindPrimaryKey().GetName(), split2EntityType.FindPrimaryKey().GetName());
+        Assert.Same(split2EntityType.FindPrimaryKey()!.Properties.Single(), foreignKey.Properties.Single());
+        Assert.Equal(split1EntityType.FindPrimaryKey()!.GetName(), split2EntityType.FindPrimaryKey()!.GetName());
         Assert.Equal(
             foreignKey.PrincipalKey.Properties.Single().GetColumnName(table),
             foreignKey.Properties.Single().GetColumnName(table));
@@ -353,17 +424,17 @@ public class NameRewritingConventionTest
     {
         var model = BuildModel(b => b.Entity<Owner>().OwnsOne(o => o.Owned));
 
-        var ownerEntityType = model.FindEntityType(typeof(Owner));
-        var ownedEntityType = model.FindEntityType(typeof(Owned));
+        var ownerEntityType = model.FindEntityType(typeof(Owner))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
 
         Assert.Equal("owner", ownerEntityType.GetTableName());
         Assert.Equal("owner", ownedEntityType.GetTableName());
         var table = StoreObjectIdentifier.Create(ownerEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal(table, StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value);
 
-        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))!.GetColumnName(table));
 
-        var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey(), ownedEntityType.FindPrimaryKey());
+        var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey()!, ownedEntityType.FindPrimaryKey()!);
         Assert.Equal("pk_owner", ownerKey.GetName());
         Assert.Equal("pk_owner", ownedKey.GetName());
         Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
@@ -381,17 +452,17 @@ public class NameRewritingConventionTest
                     e.ToTable("destination_table");
                 }));
 
-        var ownerEntityType = model.FindEntityType(typeof(Owner));
-        var ownedEntityType = model.FindEntityType(typeof(Owned));
+        var ownerEntityType = model.FindEntityType(typeof(Owner))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
 
         Assert.Equal("destination_table", ownerEntityType.GetTableName());
         Assert.Equal("destination_table", ownedEntityType.GetTableName());
         var table = StoreObjectIdentifier.Create(ownerEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal(table, StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value);
 
-        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+        Assert.Equal("owned_owned_property", ownedEntityType.FindProperty(nameof(Owned.OwnedProperty))!.GetColumnName(table));
 
-        var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey(), ownedEntityType.FindPrimaryKey());
+        var (ownerKey, ownedKey) = (ownerEntityType.FindPrimaryKey()!, ownedEntityType.FindPrimaryKey()!);
         Assert.Equal("pk_destination_table", ownerKey.GetName());
         Assert.Equal("pk_destination_table", ownedKey.GetName());
         Assert.Equal("id", ownerKey.Properties.Single().GetColumnName(table));
@@ -410,9 +481,9 @@ public class NameRewritingConventionTest
                     e.ToTable("destination_table");
                 }));
 
-        var ownerEntityType = model.FindEntityType(typeof(Owner));
-        var owned1EntityType = model.FindEntityType("owned1");
-        var owned2EntityType = model.FindEntityType("owned2");
+        var ownerEntityType = model.FindEntityType(typeof(Owner))!;
+        var owned1EntityType = model.FindEntityType("owned1")!;
+        var owned2EntityType = model.FindEntityType("owned2")!;
 
         Assert.Equal("destination_table", ownerEntityType.GetTableName());
         Assert.Equal("destination_table", owned1EntityType.GetTableName());
@@ -421,11 +492,11 @@ public class NameRewritingConventionTest
         Assert.Equal(table, StoreObjectIdentifier.Create(owned1EntityType, StoreObjectType.Table)!.Value);
         Assert.Equal(table, StoreObjectIdentifier.Create(owned2EntityType, StoreObjectType.Table)!.Value);
 
-        Assert.Equal("owned_owned_property", owned1EntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
-        Assert.Equal("owned2_owned_property", owned2EntityType.FindProperty(nameof(Owned.OwnedProperty)).GetColumnName(table));
+        Assert.Equal("owned_owned_property", owned1EntityType.FindProperty(nameof(Owned.OwnedProperty))!.GetColumnName(table));
+        Assert.Equal("owned2_owned_property", owned2EntityType.FindProperty(nameof(Owned.OwnedProperty))!.GetColumnName(table));
 
         var (ownerKey, owned1Key, owned2Key) =
-            (ownerEntityType.FindPrimaryKey(), owned1EntityType.FindPrimaryKey(), owned1EntityType.FindPrimaryKey());
+            (ownerEntityType.FindPrimaryKey()!, owned1EntityType.FindPrimaryKey()!, owned1EntityType.FindPrimaryKey()!);
         Assert.Equal("pk_destination_table", ownerKey.GetName());
         Assert.Equal("pk_destination_table", owned1Key.GetName());
         Assert.Equal("pk_destination_table", owned2Key.GetName());
@@ -440,23 +511,23 @@ public class NameRewritingConventionTest
         var model = BuildModel(b =>
             b.Entity<Owner>().OwnsOne(o => o.Owned).ToTable("another_table"));
 
-        var ownedEntityType = model.FindEntityType(typeof(Owned));
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
 
-        Assert.Equal("pk_another_table", ownedEntityType.FindPrimaryKey().GetName());
+        Assert.Equal("pk_another_table", ownedEntityType.FindPrimaryKey()!.GetName());
         Assert.Equal("another_table", ownedEntityType.GetTableName());
-        Assert.Equal("owned_property", ownedEntityType.FindProperty("OwnedProperty")
+        Assert.Equal("owned_property", ownedEntityType.FindProperty("OwnedProperty")!
             .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
     }
 
     [Fact]
     public void Owned_entity_withs_OwnsMany()
     {
-        var model = BuildModel(b => b.Entity<Blog>().OwnsMany(b => b.Posts));
-        var ownedEntityType = model.FindEntityType(typeof(Post));
+        var model = BuildModel(mb => mb.Entity<Blog>().OwnsMany(b => b.Posts));
+        var ownedEntityType = model.FindEntityType(typeof(Post))!;
 
         Assert.Equal("post", ownedEntityType.GetTableName());
-        Assert.Equal("pk_post", ownedEntityType.FindPrimaryKey().GetName());
-        Assert.Equal("post_title", ownedEntityType.FindProperty("PostTitle")
+        Assert.Equal("pk_post", ownedEntityType.FindPrimaryKey()!.GetName());
+        Assert.Equal("post_title", ownedEntityType.FindProperty("PostTitle")!
             .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
     }
 
@@ -486,10 +557,10 @@ public class NameRewritingConventionTest
             Assert.Null);
     }
 
-    private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo culture = null)
+    private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
         => BuildModel(builderAction, culture).GetEntityTypes().Single();
 
-    private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo culture = null)
+    private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
     {
         var conventionSet = SqliteTestHelpers
             .Instance
@@ -517,15 +588,15 @@ public class NameRewritingConventionTest
     public class Blog
     {
         public int BlogId { get; set; }
-        public List<Post> Posts { get; set; }
+        public required List<Post> Posts { get; set; }
     }
 
     public class Post
     {
         public int PostId { get; set; }
-        public Blog Blog { get; set; }
+        public required Blog Blog { get; set; }
         public int BlogId { get; set; }
-        public string PostTitle { get; set; }
+        public required string PostTitle { get; set; }
     }
 
     public class Parent
@@ -539,10 +610,21 @@ public class NameRewritingConventionTest
         public int ChildProperty { get; set; }
     }
 
+    public abstract class AbstractParent
+    {
+        public int Id { get; set; }
+        public int ParentProperty { get; set; }
+    }
+
+    public class ChildOfAbstract : AbstractParent
+    {
+        public int ChildProperty { get; set; }
+    }
+
     public class ChildWithOwned : Parent
     {
         public int ChildProperty { get; set; }
-        public Owned Owned { get; set; }
+        public required Owned Owned { get; set; }
     }
 
     public class Split1
@@ -551,7 +633,7 @@ public class NameRewritingConventionTest
         public int OneProp { get; set; }
         public int Common { get; set; }
 
-        public Split2 S2 { get; set; }
+        public required Split2 S2 { get; set; }
     }
 
     public class Split2
@@ -560,16 +642,16 @@ public class NameRewritingConventionTest
         public int TwoProp { get; set; }
         public int Common { get; set; }
 
-        public Split1 S1 { get; set; }
+        public required Split1 S1 { get; set; }
     }
 
     public class Owner
     {
         public int Id { get; set; }
         public int OwnerProperty { get; set; }
-        public Owned Owned { get; set; }
+        public required Owned Owned { get; set; }
         [NotMapped]
-        public Owned Owned2 { get; set; }
+        public required Owned Owned2 { get; set; }
     }
 
     public class Owned

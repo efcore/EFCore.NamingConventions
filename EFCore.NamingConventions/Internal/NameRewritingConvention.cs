@@ -34,7 +34,7 @@ public class NameRewritingConvention :
 
         // Note that the base type is null when the entity type is first added - a base type only gets added later
         // (see ProcessEntityTypeBaseTypeChanged). But we still have this check for safety.
-        if (entityType.BaseType is null)
+        if (entityType.BaseType is null && !entityType.ClrType.IsAbstract)
         {
             if (entityType.GetTableName() is { } tableName)
             {
@@ -57,10 +57,10 @@ public class NameRewritingConvention :
     {
         var entityType = entityTypeBuilder.Metadata;
 
-        if (newBaseType is null)
+        if (newBaseType is null || entityType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy)
         {
             // The entity is getting removed from a hierarchy. Set the (rewritten) TableName.
-            if (entityType.GetTableName() is { } tableName)
+            if (entityType.GetTableName() is { } tableName && !entityType.ClrType.IsAbstract)
             {
                 entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
             }
@@ -71,6 +71,7 @@ public class NameRewritingConvention :
             // If this is TPH, we remove the previously rewritten TableName (and non-rewritten Schema) which we set when the
             // entity type was first added to the model (see ProcessEntityTypeAdded).
             // If this is TPT, TableName and Schema are set explicitly, so the following will be ignored.
+            // TPC is handled above (we need to rewrite just like with a normal table that isn't in an inheritance hierarchy)
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.TableName);
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.Schema);
         }
