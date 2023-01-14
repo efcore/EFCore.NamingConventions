@@ -88,10 +88,11 @@ public class NameRewritingConvention :
         var ownedEntityType = foreignKey.DeclaringEntityType;
 
         // An entity type is becoming owned - this is a bit complicated.
-        // Unless it's a collection navigation, or the owned entity table name was explicitly set by the user, this triggers table
-        // splitting, which means we need to undo rewriting which we've done previously.
+        // This is a trigger for table splitting - unless the foreign key is non-unique (collection navigation), it's JSON ownership,
+        // or the owned entity table name was explicitly set by the user.
+        // If this is table splitting, we need to undo rewriting which we've done previously.
         if (foreignKey.IsOwnership
-            && !foreignKey.GetNavigation(false)!.IsCollection
+            && (foreignKey.IsUnique || !string.IsNullOrEmpty(ownedEntityType.GetContainerColumnName()))
             && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
         {
             // Reset the table name which we've set when the entity type was added.
