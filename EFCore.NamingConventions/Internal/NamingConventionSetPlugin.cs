@@ -3,7 +3,6 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
-using JetBrains.Annotations;
 
 namespace EFCore.NamingConventions.Internal;
 
@@ -17,6 +16,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
         var extension = _options.FindExtension<NamingConventionsOptionsExtension>()!;
         var namingStyle = extension.NamingConvention;
         var culture = extension.Culture;
+        var customMapper = extension.CustomerMapper;
         if (namingStyle == NamingConvention.None)
         {
             return conventionSet;
@@ -29,6 +29,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
             NamingConvention.CamelCase => new CamelCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
             NamingConvention.UpperCase => new UpperCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
             NamingConvention.UpperSnakeCase => new UpperSnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
+            NamingConvention.Custom => new CustomNameRewriter(customMapper ?? throw new InvalidOperationException("No custom mapping was provided")),
             _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + namingStyle)
         });
 

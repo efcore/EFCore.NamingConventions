@@ -25,4 +25,8 @@ public class RewriterTest
     [Fact]
     public void Upper_case()
         => Assert.Equal("FULLNAME", new UpperCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+
+    [Fact]
+    public void Map()
+        => Assert.Equal("Name", new CustomNameRewriter(name => name.Replace("Full", "")).RewriteName("FullName"));
 }
