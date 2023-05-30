@@ -34,6 +34,8 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.None;
+        clone._culture = null;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -42,6 +44,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.SnakeCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -50,6 +53,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.LowerCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -58,6 +62,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -66,6 +71,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperSnakeCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -74,6 +80,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.CamelCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -81,6 +88,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.Custom;
+        clone._culture = null;
         clone._customMapper = mapping;
         return clone;
     }
