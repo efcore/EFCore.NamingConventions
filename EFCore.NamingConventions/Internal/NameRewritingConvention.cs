@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EFCore.NamingConventions.Internal;
 
@@ -32,9 +33,19 @@ public class NameRewritingConvention :
     {
         var entityType = entityTypeBuilder.Metadata;
 
+        if (!entityType.ClrType.IsAbstract)
+        {
+            ProcessEntityTypeAbstract(entityTypeBuilder);
+        }
+    }
+
+    private void ProcessEntityTypeAbstract(
+        IConventionEntityTypeBuilder entityTypeBuilder)
+    {
+        var entityType = entityTypeBuilder.Metadata;
         // Note that the base type is null when the entity type is first added - a base type only gets added later
         // (see ProcessEntityTypeBaseTypeChanged). But we still have this check for safety.
-        if (entityType.BaseType is null && !entityType.ClrType.IsAbstract)
+        if (entityType.BaseType is null)
         {
             if (entityType.GetTableName() is { } tableName)
             {
@@ -56,7 +67,10 @@ public class NameRewritingConvention :
         IConventionContext<IConventionEntityType> context)
     {
         var entityType = entityTypeBuilder.Metadata;
-
+        if (entityType.BaseType is { } && entityType.GetMappingStrategy() == RelationalAnnotationNames.TphMappingStrategy)
+        {
+            ProcessEntityTypeAbstract(entityType.BaseType.Builder);
+        }
         if (newBaseType is null || entityType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy)
         {
             // The entity is getting removed from a hierarchy. Set the (rewritten) TableName.
