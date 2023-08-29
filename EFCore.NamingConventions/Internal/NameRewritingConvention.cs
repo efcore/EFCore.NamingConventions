@@ -293,14 +293,14 @@ public class NameRewritingConvention :
     private void RewriteColumnName(IConventionPropertyBuilder propertyBuilder)
     {
         var property = propertyBuilder.Metadata;
-        var entityType = property.DeclaringEntityType;
+        var entityType = (IConventionEntityType)property.DeclaringType;
 
         // Remove any previous setting of the column name we may have done, so we can get the default recalculated below.
         property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
 
         // TODO: The following is a temporary hack. We should probably just always set the relational override below,
         // but https://github.com/dotnet/efcore/pull/23834
-        var baseColumnName = StoreObjectIdentifier.Create(property.DeclaringEntityType, StoreObjectType.Table) is { } tableIdentifier
+        var baseColumnName = StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is { } tableIdentifier
             ? property.GetDefaultColumnName(tableIdentifier)
             : property.GetDefaultColumnName();
         if (baseColumnName is not null)
