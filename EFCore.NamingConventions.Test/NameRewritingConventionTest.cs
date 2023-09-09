@@ -620,7 +620,7 @@ public class NameRewritingConventionTest
 
     public abstract class AbstractParent
     {
-        public int Id { get; }
+        public int Id { get; set; }
         public int ParentProperty { get; set; }
     }
 
