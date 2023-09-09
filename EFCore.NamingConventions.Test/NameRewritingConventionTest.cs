@@ -105,6 +105,14 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Foreign_key_on_key_without_setter()
+    {
+        var model = BuildModel(b => b.Entity<Board>().HasKey(e => e.Id));
+        var entityType = model.FindEntityType(typeof(Card))!;
+        Assert.Equal("fk_card_board_board_id", entityType.GetForeignKeys().Single().GetConstraintName());
+    }
+
+    [Fact]
     public void Index()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>().HasIndex(s => s.SomeProperty));
@@ -612,7 +620,7 @@ public class NameRewritingConventionTest
 
     public abstract class AbstractParent
     {
-        public int Id { get; set; }
+        public int Id { get; }
         public int ParentProperty { get; set; }
     }
 
@@ -657,5 +665,19 @@ public class NameRewritingConventionTest
     public class Owned
     {
         public int OwnedProperty { get; set; }
+    }
+
+    public class Board
+    {
+        public int Id { get; }
+
+        public List<Card> Cards { get; private set; }
+    }
+
+    public class Card
+    {
+        public int Id { get; }
+
+        public Board Board { get; private set; }
     }
 }

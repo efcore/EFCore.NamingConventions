@@ -38,6 +38,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
         conventionSet.ForeignKeyOwnershipChangedConventions.Add(convention);
         conventionSet.KeyAddedConventions.Add(convention);
         conventionSet.ForeignKeyAddedConventions.Add(convention);
+        conventionSet.ForeignKeyPropertiesChangedConventions.Add(convention);
         conventionSet.IndexAddedConventions.Add(convention);
         conventionSet.EntityTypeBaseTypeChangedConventions.Add(convention);
         conventionSet.ModelFinalizingConventions.Add(convention);
