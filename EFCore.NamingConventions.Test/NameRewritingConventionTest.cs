@@ -532,6 +532,21 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Complex_property()
+    {
+        var model = BuildModel(b =>
+            b.Entity<Waypoint>().ComplexProperty(w => w.Location));
+
+        var entityType = model.FindEntityType(typeof(Waypoint))!;
+        var complexType = entityType.FindComplexProperty("Location")!.ComplexType;
+
+        Assert.Equal("location_longitude", complexType.FindProperty("Longitude")!
+            .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("location_latitude", complexType.FindProperty("Latitude")!
+            .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
     public void Not_mapped_to_table()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToSqlQuery("SELECT foobar"));
@@ -657,5 +672,17 @@ public class NameRewritingConventionTest
     public class Owned
     {
         public int OwnedProperty { get; set; }
+    }
+
+    public class Waypoint
+    {
+        public int Id { get; set; }
+        public required Location Location { get; set; }
+    }
+
+    public class Location
+    {
+        public double Longitude { get; set; }
+        public double Latitude { get; set; }
     }
 }
