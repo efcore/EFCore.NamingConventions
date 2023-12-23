@@ -29,12 +29,25 @@ public class NameRewritingConvention :
     public virtual void ProcessEntityTypeAdded(
         IConventionEntityTypeBuilder entityTypeBuilder,
         IConventionContext<IConventionEntityTypeBuilder> context)
+        // We treat addition of a new entity type as a hierarchy change; this will rewrite the table name on the new entity type as needed
+        => ProcessHierarchyChange(entityTypeBuilder);
+
+    public void ProcessEntityTypeBaseTypeChanged(
+        IConventionEntityTypeBuilder entityTypeBuilder,
+        IConventionEntityType? newBaseType,
+        IConventionEntityType? oldBaseType,
+        IConventionContext<IConventionEntityType> context)
+        => ProcessHierarchyChange(entityTypeBuilder);
+
+    private void ProcessHierarchyChange(IConventionEntityTypeBuilder entityTypeBuilder)
     {
         var entityType = entityTypeBuilder.Metadata;
 
-        // Note that the base type is null when the entity type is first added - a base type only gets added later
-        // (see ProcessEntityTypeBaseTypeChanged). But we still have this check for safety.
-        if (entityType.BaseType is null && !entityType.ClrType.IsAbstract)
+        // We generally want to re-set the table name whenever the base type of the entity type changes; both when it's getting removed
+        // from a hierarchy (newBaseType is null), and when it's getting added to a hierarchy.
+        // The only case when an entity type should *not* have a (rewritten) table name, is when its an abstract base type in a TPC
+        // hierarchy; for TPH/TPT these are mapped to some table, but for TPC they aren't.
+        if (!(entityType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract))
         {
             if (entityType.GetTableName() is { } tableName)
             {
@@ -47,31 +60,8 @@ public class NameRewritingConvention :
                 entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(viewName), entityType.GetViewSchema());
             }
         }
-    }
-
-    public void ProcessEntityTypeBaseTypeChanged(
-        IConventionEntityTypeBuilder entityTypeBuilder,
-        IConventionEntityType? newBaseType,
-        IConventionEntityType? oldBaseType,
-        IConventionContext<IConventionEntityType> context)
-    {
-        var entityType = entityTypeBuilder.Metadata;
-
-        if (newBaseType is null || entityType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy)
-        {
-            // The entity is getting removed from a hierarchy. Set the (rewritten) TableName.
-            if (entityType.GetTableName() is { } tableName && !entityType.ClrType.IsAbstract)
-            {
-                entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
-            }
-        }
         else
         {
-            // The entity is getting a new base type (e.g. joining a hierarchy).
-            // If this is TPH, we remove the previously rewritten TableName (and non-rewritten Schema) which we set when the
-            // entity type was first added to the model (see ProcessEntityTypeAdded).
-            // If this is TPT, TableName and Schema are set explicitly, so the following will be ignored.
-            // TPC is handled above (we need to rewrite just like with a normal table that isn't in an inheritance hierarchy)
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.TableName);
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.Schema);
         }
@@ -121,93 +111,103 @@ public class NameRewritingConvention :
     {
         var entityType = entityTypeBuilder.Metadata;
 
-        // If the View/SqlQuery/Function name is being set on the entity type, and its table name is set by convention, then we assume
-        // we're the one who set the table name back when the entity type was originally added. We now undo this as the entity type
-        // should only be mapped to the View/SqlQuery/Function.
-        if (name is RelationalAnnotationNames.ViewName or RelationalAnnotationNames.SqlQuery or RelationalAnnotationNames.FunctionName
-            && annotation?.Value is not null
-            && entityType.GetTableNameConfigurationSource() == ConfigurationSource.Convention)
+        switch (name)
         {
-            entityType.SetTableName(null);
-        }
-
-        if (name != RelationalAnnotationNames.TableName
-            || StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is not StoreObjectIdentifier tableIdentifier)
-        {
-            return;
-        }
-
-        // The table's name is changing - rewrite keys, index names
-
-        if (entityType.FindPrimaryKey() is IConventionKey primaryKey)
-        {
-            // We need to rewrite the PK name.
-            // However, this isn't yet supported with TPT, see https://github.com/dotnet/efcore/issues/23444.
-            // So we need to check if the entity is within a TPT hierarchy, or is an owned entity within a TPT hierarchy.
-
-            var rootType = entityType.GetRootType();
-            var isTPT = rootType.GetDerivedTypes().FirstOrDefault() is { } derivedType
-                && derivedType.GetTableName() != rootType.GetTableName();
-
-            if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null && !isTPT)
+            // The inheritance strategy is changing, e.g. the entity type is being made part of (or is leaving) a TPH/TPT/TPC hierarchy.
+            case RelationalAnnotationNames.MappingStrategy:
             {
-                if (primaryKey.GetDefaultName() is { } primaryKeyName)
-                {
-                    primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKeyName));
-                }
+                ProcessHierarchyChange(entityTypeBuilder);
+                return;
             }
-            else
+
+            // If the View/SqlQuery/Function name is being set on the entity type, and its table name is set by convention, then we assume
+            // we're the one who set the table name back when the entity type was originally added. We now undo this as the entity type
+            // should only be mapped to the View/SqlQuery/Function.
+            case RelationalAnnotationNames.ViewName or RelationalAnnotationNames.SqlQuery or RelationalAnnotationNames.FunctionName
+                when annotation?.Value is not null
+                && entityType.GetTableNameConfigurationSource() == ConfigurationSource.Convention:
             {
-                // This hierarchy is being transformed into TPT via the explicit setting of the table name.
-                // We not only have to reset our own key name, but also the parents'. Otherwise, the parent's key name
-                // is used as the child's (see RelationalKeyExtensions.GetName), and we get a "duplicate key name in database" error
-                // since both parent and child have the same key name;
-                foreach (var type in entityType.GetRootType().GetDerivedTypesInclusive())
+                entityType.SetTableName(null);
+                return;
+            }
+
+            // The table's name is changing - rewrite keys, index names
+            case RelationalAnnotationNames.TableName
+                when StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is StoreObjectIdentifier tableIdentifier:
+            {
+                if (entityType.FindPrimaryKey() is IConventionKey primaryKey)
                 {
-                    if (type.FindPrimaryKey() is IConventionKey pk)
+                    // We need to rewrite the PK name.
+                    // However, this isn't yet supported with TPT, see https://github.com/dotnet/efcore/issues/23444.
+                    // So we need to check if the entity is within a TPT hierarchy, or is an owned entity within a TPT hierarchy.
+
+                    var rootType = entityType.GetRootType();
+                    var isTPT = rootType.GetDerivedTypes().FirstOrDefault() is { } derivedType
+                        && derivedType.GetTableName() != rootType.GetTableName();
+
+                    if (entityType.FindRowInternalForeignKeys(tableIdentifier).FirstOrDefault() is null && !isTPT)
                     {
-                        pk.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                        if (primaryKey.GetDefaultName() is { } primaryKeyName)
+                        {
+                            primaryKey.Builder.HasName(_namingNameRewriter.RewriteName(primaryKeyName));
+                        }
+                    }
+                    else
+                    {
+                        // This hierarchy is being transformed into TPT via the explicit setting of the table name.
+                        // We not only have to reset our own key name, but also the parents'. Otherwise, the parent's key name
+                        // is used as the child's (see RelationalKeyExtensions.GetName), and we get a "duplicate key name in database" error
+                        // since both parent and child have the same key name;
+                        foreach (var type in entityType.GetRootType().GetDerivedTypesInclusive())
+                        {
+                            if (type.FindPrimaryKey() is IConventionKey pk)
+                            {
+                                pk.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        foreach (var foreignKey in entityType.GetForeignKeys())
-        {
-            if (foreignKey.GetDefaultName() is { } foreignKeyName)
-            {
-                foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKeyName));
-            }
-        }
+                foreach (var foreignKey in entityType.GetForeignKeys())
+                {
+                    if (foreignKey.GetDefaultName() is { } foreignKeyName)
+                    {
+                        foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKeyName));
+                    }
+                }
 
-        foreach (var index in entityType.GetIndexes())
-        {
-            if (index.GetDefaultDatabaseName() is { } indexName)
-            {
-                index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
-            }
-        }
+                foreach (var index in entityType.GetIndexes())
+                {
+                    if (index.GetDefaultDatabaseName() is { } indexName)
+                    {
+                        index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
+                    }
+                }
 
-        if (annotation?.Value is not null
-            && entityType.FindOwnership() is IConventionForeignKey ownership
-            && (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
-        {
-            // An owned entity's table is being set explicitly - this is the trigger to undo table splitting (which is the default).
+                if (annotation?.Value is not null
+                    && entityType.FindOwnership() is IConventionForeignKey ownership
+                    && (string)annotation.Value != ownership.PrincipalEntityType.GetTableName())
+                {
+                    // An owned entity's table is being set explicitly - this is the trigger to undo table splitting (which is the default).
 
-            // When the entity became owned, we prefixed all of its properties - we must now undo that.
-            foreach (var property in entityType.GetProperties()
-                         .Except(entityType.FindPrimaryKey()?.Properties ?? Array.Empty<IConventionProperty>())
-                         .Where(p => p.Builder.CanSetColumnName(null)))
-            {
-                RewriteColumnName(property.Builder);
-            }
+                    // When the entity became owned, we prefixed all of its properties - we must now undo that.
+                    foreach (var property in entityType.GetProperties()
+                                 .Except(entityType.FindPrimaryKey()?.Properties ?? Array.Empty<IConventionProperty>())
+                                 .Where(p => p.Builder.CanSetColumnName(null)))
+                    {
+                        RewriteColumnName(property.Builder);
+                    }
 
-            // We previously rewrote the owned entity's primary key name, when the owned entity was still in table splitting.
-            // Now that its getting its own table, rewrite the primary key constraint name again.
-            if (entityType.FindPrimaryKey() is IConventionKey key
-                && key.GetDefaultName() is { } keyName)
-            {
-                key.Builder.HasName(_namingNameRewriter.RewriteName(keyName));
+                    // We previously rewrote the owned entity's primary key name, when the owned entity was still in table splitting.
+                    // Now that its getting its own table, rewrite the primary key constraint name again.
+                    if (entityType.FindPrimaryKey() is IConventionKey key
+                        && key.GetDefaultName() is { } keyName)
+                    {
+                        key.Builder.HasName(_namingNameRewriter.RewriteName(keyName));
+                    }
+                }
+
+                return;
             }
         }
     }
