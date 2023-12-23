@@ -235,6 +235,37 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void TPH_with_abstract_parent()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<AbstractParent>();
+            b.Entity<ChildOfAbstract>();
+        });
+
+        var parentEntityType = model.FindEntityType(typeof(AbstractParent))!;
+        var childEntityType = model.FindEntityType(typeof(ChildOfAbstract))!;
+
+        Assert.Equal("abstract_parent", parentEntityType.GetTableName());
+
+        Assert.Equal("abstract_parent", childEntityType.GetTableName());
+        Assert.Equal("id", childEntityType.FindProperty(nameof(AbstractParent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("discriminator", childEntityType.FindProperty("Discriminator")!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildOfAbstract.ChildProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+
+        var primaryKey = parentEntityType.FindPrimaryKey()!;
+        Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
+
+        Assert.Equal("pk_abstract_parent", primaryKey.GetName());
+
+        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
+        Assert.Equal("pk_abstract_parent", primaryKey.GetName(childStoreObjectIdentifier));
+    }
+
+    [Fact]
     public void TPT_with_owned()
     {
         var model = BuildModel(b =>
