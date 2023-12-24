@@ -5,8 +5,10 @@ using System.Globalization;
 using System.Linq;
 using EFCore.NamingConventions.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using Microsoft.EntityFrameworkCore.Sqlite.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -551,7 +553,7 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void Owned_entity_withs_OwnsMany()
+    public void Owned_entity_with_OwnsMany()
     {
         var model = BuildModel(mb => mb.Entity<Blog>().OwnsMany(b => b.Posts));
         var ownedEntityType = model.FindEntityType(typeof(Post))!;
@@ -563,10 +565,43 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Owned_json_entity_with_OwnsOne()
+    {
+        var model = BuildModel(mb => mb.Entity<Owner>().OwnsOne(b => b.Owned, p => p.ToJson()));
+
+        var ownerEntityType = model.FindEntityType(typeof(Owner))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
+
+        Assert.Equal("owner", ownerEntityType.GetTableName());
+
+        Assert.Equal("owner", ownedEntityType.GetTableName());
+        Assert.Null(ownedEntityType.FindPrimaryKey()!.GetName());
+        Assert.Equal("owned", ownedEntityType.GetContainerColumnName());
+        Assert.Null(ownedEntityType.FindProperty("OwnedProperty")!
+            .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
+    public void Owned_json_entity_with_OwnsMany()
+    {
+        var model = BuildModel(mb => mb.Entity<Blog>().OwnsMany(b => b.Posts, p => p.ToJson()));
+
+        var ownerEntityType = model.FindEntityType(typeof(Blog))!;
+        var ownedEntityType = model.FindEntityType(typeof(Post))!;
+
+        Assert.Equal("blog", ownerEntityType.GetTableName());
+
+        Assert.Equal("blog", ownedEntityType.GetTableName());
+        Assert.Null(ownedEntityType.FindPrimaryKey()!.GetName());
+        Assert.Equal("posts", ownedEntityType.GetContainerColumnName());
+        Assert.Null(ownedEntityType.FindProperty("PostTitle")!
+            .GetColumnName(StoreObjectIdentifier.Create(ownedEntityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
     public void Complex_property()
     {
-        var model = BuildModel(b =>
-            b.Entity<Waypoint>().ComplexProperty(w => w.Location));
+        var model = BuildModel(b => b.Entity<Waypoint>().ComplexProperty(w => w.Location));
 
         var entityType = model.FindEntityType(typeof(Waypoint))!;
         var complexType = entityType.FindComplexProperty("Location")!.ComplexType;
@@ -622,7 +657,15 @@ public class NameRewritingConventionTest
 
         var modelBuilder = new ModelBuilder(conventionSet);
         builderAction(modelBuilder);
-        return modelBuilder.FinalizeModel();
+        var model = modelBuilder.FinalizeModel();
+
+        var contextServices = SqliteTestHelpers.Instance.CreateContextServices();
+        var modelRuntimeInitializer = contextServices.GetRequiredService<IModelRuntimeInitializer>();
+
+        model = modelRuntimeInitializer.Initialize(
+            model, designTime: false, new TestLogger<DbLoggerCategory.Model.Validation, SqliteLoggingDefinitions>());
+
+        return model;
     }
 
     public class SampleEntity
