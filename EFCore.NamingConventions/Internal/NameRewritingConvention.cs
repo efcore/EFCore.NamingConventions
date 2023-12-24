@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -73,31 +74,63 @@ public class NameRewritingConvention :
         => RewriteColumnName(propertyBuilder);
 
     public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
+        => ProcessOwnershipChange(relationshipBuilder.Metadata);
+
+    private void ProcessOwnershipChange(IConventionForeignKey foreignKey)
     {
-        var foreignKey = relationshipBuilder.Metadata;
         var ownedEntityType = foreignKey.DeclaringEntityType;
 
         // An entity type is becoming owned - this is a bit complicated.
         // This is a trigger for table splitting - unless the foreign key is non-unique (collection navigation), it's JSON ownership,
         // or the owned entity table name was explicitly set by the user.
         // If this is table splitting, we need to undo rewriting which we've done previously.
-        if (foreignKey.IsOwnership
-            && (foreignKey.IsUnique || !string.IsNullOrEmpty(ownedEntityType.GetContainerColumnName()))
-            && ownedEntityType.GetTableNameConfigurationSource() != ConfigurationSource.Explicit)
+
+        // TODO: Un-own?
+        if (foreignKey.IsOwnership)
         {
             // Reset the table name which we've set when the entity type was added.
             // If table splitting was configured by explicitly setting the table name, the following
             // does nothing.
-            ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
-            ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
-
             ownedEntityType.FindPrimaryKey()?.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
 
-            // We've previously set rewritten column names when the entity was originally added (before becoming owned).
-            // These need to be rewritten again to include the owner prefix.
-            foreach (var property in ownedEntityType.GetProperties())
+            if (ownedEntityType.IsMappedToJson())
             {
-                RewriteColumnName(property.Builder);
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+
+                if (ownedEntityType.GetContainerColumnName() is string containerColumnName)
+                {
+                    ownedEntityType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
+                }
+
+                // TODO: Note that we do not rewrite names of JSON properties (which aren't relational columns).
+                // TODO: We could introduce an option for doing so, though that's probably not usually what people want when doing JSON
+                foreach (var property in ownedEntityType.GetProperties())
+                {
+                    property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+                }
+            }
+            else
+            {
+                // 1. If the foreign key is unique (non-collection), reset any previously-rewritten name:
+                //   * The EF default for these is table sharing, so we need to remove the table name to allow the owned to have null
+                //     (use its owner's table name)
+                //   * If the user explicitly specified a table name (to disable table splitting), this does nothing (convention doesn't
+                //     override explicit).
+                // 2. Otherwise, if the foreign key represents a collection, EF maps to a separate table. Making this owned doesn't change
+                //    anything naming-wise.
+                if (foreignKey.IsUnique)
+                {
+                    ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                    ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+
+                    // We've previously set rewritten column names when the entity was originally added (before becoming owned).
+                    // These need to be rewritten again to include the owner prefix.
+                    foreach (var property in ownedEntityType.GetProperties())
+                    {
+                        RewriteColumnName(property.Builder);
+                    }
+                }
             }
         }
     }
@@ -117,6 +150,15 @@ public class NameRewritingConvention :
             case RelationalAnnotationNames.MappingStrategy:
             {
                 ProcessHierarchyChange(entityTypeBuilder);
+                return;
+            }
+
+            case RelationalAnnotationNames.ContainerColumnName:
+            {
+                // TODO: Support de-JSON-ification?
+                var foreignKey = entityTypeBuilder.Metadata.FindOwnership();
+                Debug.Assert(foreignKey is not null, "ContainerColumnName annotation changed but FindOwnership returned null");
+                ProcessOwnershipChange(foreignKey);
                 return;
             }
 
