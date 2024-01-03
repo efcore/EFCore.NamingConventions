@@ -14,7 +14,8 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
 
     public ConventionSet ModifyConventions(ConventionSet conventionSet)
     {
-        var extension = _options.FindExtension<NamingConventionsOptionsExtension>()!;
+        var extension = _options.FindExtension<NamingConventionsOptionsExtension>() ??
+            new NamingConventionsOptionsExtension().WithoutNaming();
         var namingStyle = extension.NamingConvention;
         var culture = extension.Culture;
         if (namingStyle == NamingConvention.None)
