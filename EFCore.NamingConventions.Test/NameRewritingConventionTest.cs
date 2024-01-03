@@ -139,48 +139,40 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPT()
-    {
-        var model = BuildModel(b =>
+    public void TPT_with_explicit_table_names()
+        => AssertTpt(BuildModel(b =>
         {
             b.Entity<Parent>().ToTable("parent");
             b.Entity<Child>().ToTable("child");
-        });
-
-        var parentEntityType = model.FindEntityType(typeof(Parent))!;
-        var childEntityType = model.FindEntityType(typeof(Child))!;
-
-        Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
-            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
-            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-
-        Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
-            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
-
-        var primaryKey = parentEntityType.FindPrimaryKey()!;
-        Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
-
-        Assert.Equal("PK_parent", primaryKey.GetName());
-
-        // For the following, see #112
-        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
-        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
-        Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
-        Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
-    }
+        }));
 
     [Fact]
     public void TPT_reversed_configuration()
-    {
-        var model = BuildModel(b =>
+        => AssertTpt(BuildModel(b =>
         {
             b.Entity<Child>().ToTable("child");
             b.Entity<Parent>().ToTable("parent");
-        });
+        }));
 
+    [Fact]
+    public void TPT_with_UseTptMappingStrategy1()
+        => AssertTpt(BuildModel(b =>
+        {
+            b.Entity<Parent>().UseTptMappingStrategy();
+            b.Entity<Child>();
+        }));
+
+    [Fact]
+    public void TPT_with_UseTptMappingStrategy2()
+        => AssertTpt(BuildModel(b =>
+        {
+            b.Entity<Parent>();
+            b.Entity<Child>();
+            b.Entity<Parent>().UseTptMappingStrategy();
+        }));
+
+    private void AssertTpt(IModel model)
+    {
         var parentEntityType = model.FindEntityType(typeof(Parent))!;
         var childEntityType = model.FindEntityType(typeof(Child))!;
 
