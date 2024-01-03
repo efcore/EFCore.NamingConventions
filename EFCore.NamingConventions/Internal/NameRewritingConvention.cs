@@ -42,29 +42,31 @@ public class NameRewritingConvention :
 
     private void ProcessHierarchyChange(IConventionEntityTypeBuilder entityTypeBuilder)
     {
-        var entityType = entityTypeBuilder.Metadata;
+        var newMappingStrategy = entityTypeBuilder.Metadata.GetRootType().GetMappingStrategy();
 
-        // We generally want to re-set the table name whenever the base type of the entity type changes; both when it's getting removed
-        // from a hierarchy (newBaseType is null), and when it's getting added to a hierarchy.
-        // The only case when an entity type should *not* have a (rewritten) table name, is when its an abstract base type in a TPC
-        // hierarchy; for TPH/TPT these are mapped to some table, but for TPC they aren't.
-        if (!(entityType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract))
+        foreach (var entityType in entityTypeBuilder.Metadata.GetDerivedTypesInclusive())
         {
-            if (entityType.GetTableName() is { } tableName)
-            {
-                entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
-            }
+            entityTypeBuilder = entityType.Builder;
 
-            if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention
-                && entityType.GetViewName() is { } viewName)
-            {
-                entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(viewName), entityType.GetViewSchema());
-            }
-        }
-        else
-        {
+            // First, reset any rewritten name we previously set (e.g. when changing from TPH to TPT), and then rewrite the default name.
+            // The one exception is for abstract types in a TPC hierarchy, where we should not set the name at all, since they don't map
+            // to any table.
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.TableName);
             entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+
+            if (!(newMappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract))
+            {
+                if (entityType.GetTableName() is { } tableName)
+                {
+                    entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
+                }
+
+                if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention
+                    && entityType.GetViewName() is { } viewName)
+                {
+                    entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(viewName), entityType.GetViewSchema());
+                }
+            }
         }
     }
 
