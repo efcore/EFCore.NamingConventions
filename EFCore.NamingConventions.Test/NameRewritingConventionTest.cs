@@ -819,12 +819,12 @@ public class NameRewritingConventionTest
     public class Board
     {
         public int Id { get; }
-        public List<Card> Cards { get; private set; }
+        public required List<Card> Cards { get; set; }
     }
 
     public class Card
     {
         public int Id { get; }
-        public Board Board { get; private set; }
+        public required Board Board { get; set; }
     }
 }
