@@ -634,6 +634,18 @@ public class NameRewritingConventionTest
             Assert.Null);
     }
 
+    [Fact]
+    public void Foreign_key_on_key_without_setter()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<Board>().HasKey(e => e.Id);
+            b.Entity<Card>().HasKey(e => e.Id);
+        });
+        var entityType = model.FindEntityType(typeof(Card))!;
+        Assert.Equal("fk_card_board_board_id", entityType.GetForeignKeys().Single().GetConstraintName());
+    }
+
     private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
         => BuildModel(builderAction, culture).GetEntityTypes().Single();
 
@@ -754,5 +766,17 @@ public class NameRewritingConventionTest
     {
         public double Longitude { get; set; }
         public double Latitude { get; set; }
+    }
+
+    public class Board
+    {
+        public int Id { get; }
+        public List<Card> Cards { get; private set; }
+    }
+
+    public class Card
+    {
+        public int Id { get; }
+        public Board Board { get; private set; }
     }
 }
