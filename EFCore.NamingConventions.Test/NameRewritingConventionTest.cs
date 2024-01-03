@@ -114,16 +114,16 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPH()
+    public void Tph()
     {
         var model = BuildModel(b =>
         {
             b.Entity<Parent>();
-            b.Entity<Child>();
+            b.Entity<Child1>();
         });
 
         var parentEntityType = model.FindEntityType(typeof(Parent))!;
-        var childEntityType = model.FindEntityType(typeof(Child))!;
+        var childEntityType = model.FindEntityType(typeof(Child1))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
         Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
@@ -132,49 +132,57 @@ public class NameRewritingConventionTest
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("parent", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
+        Assert.Equal("child_one_property", childEntityType.FindProperty(nameof(Child1.ChildOneProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
     }
 
     [Fact]
-    public void TPT_with_explicit_table_names()
-        => AssertTpt(BuildModel(b =>
-        {
-            b.Entity<Parent>().ToTable("parent");
-            b.Entity<Child>().ToTable("child");
-        }));
+    public void Tpt_with_explicit_table_names()
+        => AssertTpt(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Parent>().ToTable("parent");
+                    b.Entity<Child1>().ToTable("child1");
+                }));
 
     [Fact]
-    public void TPT_reversed_configuration()
-        => AssertTpt(BuildModel(b =>
-        {
-            b.Entity<Child>().ToTable("child");
-            b.Entity<Parent>().ToTable("parent");
-        }));
+    public void Tpt_reversed_configuration()
+        => AssertTpt(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Child1>().ToTable("child1");
+                    b.Entity<Parent>().ToTable("parent");
+                }));
 
     [Fact]
-    public void TPT_with_UseTptMappingStrategy1()
-        => AssertTpt(BuildModel(b =>
-        {
-            b.Entity<Parent>().UseTptMappingStrategy();
-            b.Entity<Child>();
-        }));
+    public void Tpt_with_UseTptMappingStrategy1()
+        => AssertTpt(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Parent>().UseTptMappingStrategy();
+                    b.Entity<Child1>();
+                }));
 
     [Fact]
-    public void TPT_with_UseTptMappingStrategy2()
-        => AssertTpt(BuildModel(b =>
-        {
-            b.Entity<Parent>();
-            b.Entity<Child>();
-            b.Entity<Parent>().UseTptMappingStrategy();
-        }));
+    public void Tpt_with_UseTptMappingStrategy2()
+        => AssertTpt(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Parent>();
+                    b.Entity<Child1>();
+                    b.Entity<Parent>().UseTptMappingStrategy();
+                }));
 
     private void AssertTpt(IModel model)
     {
         var parentEntityType = model.FindEntityType(typeof(Parent))!;
-        var childEntityType = model.FindEntityType(typeof(Child))!;
+        var childEntityType = model.FindEntityType(typeof(Child1))!;
 
         Assert.Equal("parent", parentEntityType.GetTableName());
         Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
@@ -182,8 +190,8 @@ public class NameRewritingConventionTest
         Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
 
-        Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
+        Assert.Equal("child1", childEntityType.GetTableName());
+        Assert.Equal("child_one_property", childEntityType.FindProperty(nameof(Child1.ChildOneProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         var primaryKey = parentEntityType.FindPrimaryKey()!;
@@ -195,7 +203,7 @@ public class NameRewritingConventionTest
         var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
         var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
-        Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
+        Assert.Equal("PK_child1", primaryKey.GetName(childStoreObjectIdentifier));
     }
 
     [Fact]
@@ -218,7 +226,7 @@ public class NameRewritingConventionTest
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Equal("parent", childEntityType.GetTableName());
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
+        Assert.Equal("child_property", childEntityType.FindProperty(nameof(ChildWithOwned.ChildProperty))!
             .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
 
         Assert.Same(parentEntityType.FindPrimaryKey(), childEntityType.FindPrimaryKey());
@@ -299,41 +307,76 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPC()
+    public void Tpc()
+        => AssertTpc(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Parent>().UseTpcMappingStrategy().HasIndex(p => p.ParentProperty);
+                    b.Entity<Child1>();
+                    b.Entity<Child2>();
+                }));
+
+    [Fact]
+    public void Tpc2()
+        => AssertTpc(
+            BuildModel(
+                b =>
+                {
+                    b.Entity<Parent>().HasIndex(p => p.ParentProperty);
+                    b.Entity<Child1>();
+                    b.Entity<Child2>();
+                    b.Entity<Parent>().UseTpcMappingStrategy();
+                }));
+
+    private void AssertTpc(IModel model)
     {
-        var model = BuildModel(b =>
-        {
-            b.Entity<Parent>().UseTpcMappingStrategy();
-            b.Entity<Child>();
-        });
+        var parent1 = model.FindEntityType(typeof(Parent))!;
+        var child1 = model.FindEntityType(typeof(Child1))!;
+        var child2 = model.FindEntityType(typeof(Child2))!;
 
-        var parentEntityType = model.FindEntityType(typeof(Parent))!;
-        var childEntityType = model.FindEntityType(typeof(Child))!;
+        Assert.Equal("parent", parent1.GetTableName());
+        Assert.Equal("id", parent1.FindProperty(nameof(Parent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(parent1, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", parent1.FindProperty(nameof(Parent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(parent1, StoreObjectType.Table)!.Value));
 
-        Assert.Equal("parent", parentEntityType.GetTableName());
-        Assert.Equal("id", parentEntityType.FindProperty(nameof(Parent.Id))!
-            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", parentEntityType.FindProperty(nameof(Parent.ParentProperty))!
-            .GetColumnName(StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("child1", child1.GetTableName());
+        Assert.Equal("id", child1.FindProperty(nameof(Parent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(child1, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", child1.FindProperty(nameof(Parent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(child1, StoreObjectType.Table)!.Value));
+        Assert.Equal("child_one_property", child1.FindProperty(nameof(Child1.ChildOneProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(child1, StoreObjectType.Table)!.Value));
 
-        Assert.Equal("child", childEntityType.GetTableName());
-        Assert.Equal("id", childEntityType.FindProperty(nameof(Parent.Id))!
-            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("parent_property", childEntityType.FindProperty(nameof(Parent.ParentProperty))!
-            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
-        Assert.Equal("child_property", childEntityType.FindProperty(nameof(Child.ChildProperty))!
-            .GetColumnName(StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value));
+        Assert.Equal("child2", child2.GetTableName());
+        Assert.Equal("id", child2.FindProperty(nameof(Parent.Id))!
+            .GetColumnName(StoreObjectIdentifier.Create(child2, StoreObjectType.Table)!.Value));
+        Assert.Equal("parent_property", child2.FindProperty(nameof(Parent.ParentProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(child2, StoreObjectType.Table)!.Value));
+        Assert.Equal("child_two_property", child2.FindProperty(nameof(Child2.ChildTwoProperty))!
+            .GetColumnName(StoreObjectIdentifier.Create(child2, StoreObjectType.Table)!.Value));
 
-        var primaryKey = parentEntityType.FindPrimaryKey()!;
-        Assert.Same(primaryKey, childEntityType.FindPrimaryKey());
+        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parent1, StoreObjectType.Table)!.Value;
+        var child1StoreObjectIdentifier = StoreObjectIdentifier.Create(child1, StoreObjectType.Table)!.Value;
+        var child2StoreObjectIdentifier = StoreObjectIdentifier.Create(child2, StoreObjectType.Table)!.Value;
 
+        var primaryKey = parent1.FindPrimaryKey()!;
+        Assert.Same(primaryKey, child1.FindPrimaryKey());
+        Assert.Same(primaryKey, child2.FindPrimaryKey());
         Assert.Equal("PK_parent", primaryKey.GetName());
 
         // For the following, see #112
-        var parentStoreObjectIdentifier = StoreObjectIdentifier.Create(parentEntityType, StoreObjectType.Table)!.Value;
-        var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
-        Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
+        Assert.Equal("PK_child1", primaryKey.GetName(child1StoreObjectIdentifier));
+        Assert.Equal("PK_child2", primaryKey.GetName(child2StoreObjectIdentifier));
+
+        var index = Assert.Single(parent1.GetDeclaredIndexes());
+        Assert.Same(index, Assert.Single(child1.GetIndexes()));
+        Assert.Same(index, Assert.Single(child2.GetIndexes()));
+        Assert.Equal("IX_parent_parent_property", index.GetDatabaseName(parentStoreObjectIdentifier));
+        Assert.Equal("IX_child1_parent_property", index.GetDatabaseName(child1StoreObjectIdentifier));
+        Assert.Equal("IX_child2_parent_property", index.GetDatabaseName(child2StoreObjectIdentifier));
 
         // We don't currently rewrite the name of the sequence added by convention, #13
         var sequence = Assert.Single(model.GetSequences());
@@ -341,7 +384,7 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPC_with_abstract_parent()
+    public void Tpc_with_abstract_parent()
     {
         var model = BuildModel(b =>
         {
@@ -702,9 +745,14 @@ public class NameRewritingConventionTest
         public int ParentProperty { get; set; }
     }
 
-    public class Child : Parent
+    public class Child1 : Parent
     {
-        public int ChildProperty { get; set; }
+        public int ChildOneProperty { get; set; }
+    }
+
+    public class Child2 : Parent
+    {
+        public int ChildTwoProperty { get; set; }
     }
 
     public abstract class AbstractParent
