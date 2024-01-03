@@ -224,7 +224,13 @@ public class NameRewritingConvention :
 
                 foreach (var index in entityType.GetIndexes())
                 {
-                    if (index.GetDefaultDatabaseName() is { } indexName)
+                    // EF doesn't yet support different names for the same index, applied to different children in the hierarchy.
+                    // As a result, we clear any previous rewritten name (e.g. from the default TPH setup, assuming we're transitioning
+                    // from TPH to TPC), and then only rewrite names if the index is declared on our entity type, and not inherited.
+                    // See #245.
+                    index.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+
+                    if (index.DeclaringEntityType == entityType && index.GetDefaultDatabaseName() is { } indexName)
                     {
                         index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
                     }
