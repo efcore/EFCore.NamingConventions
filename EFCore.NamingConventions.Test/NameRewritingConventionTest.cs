@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
-using Microsoft.EntityFrameworkCore.Sqlite.Diagnostics.Internal;
+using Microsoft.EntityFrameworkCore.SqlServer.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -334,6 +334,10 @@ public class NameRewritingConventionTest
         var childStoreObjectIdentifier = StoreObjectIdentifier.Create(childEntityType, StoreObjectType.Table)!.Value;
         Assert.Equal("PK_parent", primaryKey.GetName(parentStoreObjectIdentifier));
         Assert.Equal("PK_child", primaryKey.GetName(childStoreObjectIdentifier));
+
+        // We don't currently rewrite the name of the sequence added by convention, #13
+        var sequence = Assert.Single(model.GetSequences());
+        Assert.Equal("ParentSequence", sequence.Name);
     }
 
     [Fact]
@@ -635,14 +639,14 @@ public class NameRewritingConventionTest
 
     private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
     {
-        var conventionSet = SqliteTestHelpers
+        var conventionSet = SqlServerTestHelpers
             .Instance
             .CreateContextServices()
             .GetRequiredService<IConventionSetBuilder>()
             .CreateConventionSet();
 
         var optionsBuilder = new DbContextOptionsBuilder();
-        SqliteTestHelpers.Instance.UseProviderOptions(optionsBuilder);
+        SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
         optionsBuilder.UseSnakeCaseNamingConvention(culture);
         var plugin = new NamingConventionSetPlugin(optionsBuilder.Options);
         plugin.ModifyConventions(conventionSet);
@@ -651,11 +655,11 @@ public class NameRewritingConventionTest
         builderAction(modelBuilder);
         var model = modelBuilder.FinalizeModel();
 
-        var contextServices = SqliteTestHelpers.Instance.CreateContextServices();
+        var contextServices = SqlServerTestHelpers.Instance.CreateContextServices();
         var modelRuntimeInitializer = contextServices.GetRequiredService<IModelRuntimeInitializer>();
 
         model = modelRuntimeInitializer.Initialize(
-            model, designTime: false, new TestLogger<DbLoggerCategory.Model.Validation, SqliteLoggingDefinitions>());
+            model, designTime: false, new TestLogger<DbLoggerCategory.Model.Validation, SqlServerLoggingDefinitions>());
 
         return model;
     }
