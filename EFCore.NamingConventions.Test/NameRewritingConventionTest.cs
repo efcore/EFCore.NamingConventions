@@ -207,7 +207,7 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPH_with_owned()
+    public void Tph_with_owned()
     {
         var model = BuildModel(b =>
         {
@@ -237,7 +237,7 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPH_with_abstract_parent()
+    public void Tph_with_abstract_parent()
     {
         var model = BuildModel(b =>
         {
@@ -268,7 +268,7 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void TPT_with_owned()
+    public void Tpt_with_owned()
     {
         var model = BuildModel(b =>
         {
@@ -551,6 +551,7 @@ public class NameRewritingConventionTest
                     e.OwnsOne("owned1", o => o.Owned);
                     e.OwnsOne("owned2", o => o.Owned2);
                     e.ToTable("destination_table");
+                    ;
                 }));
 
         var ownerEntityType = model.FindEntityType(typeof(Owner))!;

@@ -9,6 +9,33 @@ namespace EFCore.NamingConventions.Test
 {
     public class IntegrationTest
     {
+        #region Table_name_is_taken_from_DbSet_property
+
+        [Fact]
+        public void Table_name_is_taken_from_DbSet_property()
+        {
+            using var context = new BlogContext();
+            var entityType = context.Model.FindEntityType(typeof(Blog))!;
+            Assert.Equal("blogs", entityType.GetTableName());
+        }
+
+        public class Blog
+        {
+            public int Id { get; set; }
+        }
+
+        public class BlogContext : DbContext
+        {
+            public DbSet<Blog> Blogs { get; set; } = null!;
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+                => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
+        }
+
+        #endregion Table_name_is_taken_from_DbSet_property
+
+        #region Multiple_DbContexts_with_external_di_does_not_throw
+
         [Fact]
         public void Multiple_DbContexts_with_external_di_does_not_throw()
         {
@@ -54,5 +81,7 @@ namespace EFCore.NamingConventions.Test
         public interface ITestService;
 
         public class TestService : ITestService;
+
+        #endregion Multiple_DbContexts_with_external_di_does_not_throw
     }
 }

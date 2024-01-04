@@ -32,8 +32,21 @@ public class NameRewritingConvention :
     public virtual void ProcessEntityTypeAdded(
         IConventionEntityTypeBuilder entityTypeBuilder,
         IConventionContext<IConventionEntityTypeBuilder> context)
-        // We treat addition of a new entity type as a hierarchy change; this will rewrite the table name on the new entity type as needed
-        => ProcessHierarchyChange(entityTypeBuilder);
+    {
+        var entityType = entityTypeBuilder.Metadata;
+
+        // Note that the table name returned here may be the result of TableNameFromDbSetConvention which ran before us.
+        if (entityType.GetTableName() is { } tableName)
+        {
+            entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
+        }
+
+        if (entityType.GetViewNameConfigurationSource() == ConfigurationSource.Convention
+            && entityType.GetViewName() is { } viewName)
+        {
+            entityTypeBuilder.ToView(_namingNameRewriter.RewriteName(viewName), entityType.GetViewSchema());
+        }
+    }
 
     public void ProcessEntityTypeBaseTypeChanged(
         IConventionEntityTypeBuilder entityTypeBuilder,
@@ -78,9 +91,9 @@ public class NameRewritingConvention :
         => RewriteColumnName(propertyBuilder);
 
     public void ProcessForeignKeyOwnershipChanged(IConventionForeignKeyBuilder relationshipBuilder, IConventionContext<bool?> context)
-        => ProcessOwnershipChange(relationshipBuilder.Metadata);
+        => ProcessOwnershipChange(relationshipBuilder.Metadata, context);
 
-    private void ProcessOwnershipChange(IConventionForeignKey foreignKey)
+    private void ProcessOwnershipChange(IConventionForeignKey foreignKey, IConventionContext context)
     {
         var ownedEntityType = foreignKey.DeclaringEntityType;
 
@@ -136,6 +149,8 @@ public class NameRewritingConvention :
                     }
                 }
             }
+
+            context.StopProcessing();
         }
     }
 
@@ -162,7 +177,7 @@ public class NameRewritingConvention :
                 // TODO: Support de-JSON-ification?
                 var foreignKey = entityTypeBuilder.Metadata.FindOwnership();
                 Debug.Assert(foreignKey is not null, "ContainerColumnName annotation changed but FindOwnership returned null");
-                ProcessOwnershipChange(foreignKey);
+                ProcessOwnershipChange(foreignKey, context);
                 return;
             }
 
