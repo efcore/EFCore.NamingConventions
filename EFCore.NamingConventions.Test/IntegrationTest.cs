@@ -19,14 +19,36 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("blogs", entityType.GetTableName());
         }
 
+        [Fact]
+        public void Table_name_is_taken_from_DbSet_property_with_TPH()
+        {
+            using var context = new TphBlogContext();
+            Assert.Equal("blogs", context.Model.FindEntityType(typeof(Blog))!.GetTableName());
+            Assert.Equal("blogs", context.Model.FindEntityType(typeof(SpecialBlog))!.GetTableName());
+        }
+
         public class Blog
         {
             public int Id { get; set; }
         }
 
+        public class SpecialBlog : Blog
+        {
+            public string SpecialProperty { get; set; }
+        }
+
         public class BlogContext : DbContext
         {
             public DbSet<Blog> Blogs { get; set; } = null!;
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+                => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
+        }
+
+        public class TphBlogContext : DbContext
+        {
+            public DbSet<Blog> Blogs { get; set; } = null!;
+            public DbSet<SpecialBlog> SpecialBlogs { get; set; } = null!;
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
