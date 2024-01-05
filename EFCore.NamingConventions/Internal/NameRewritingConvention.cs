@@ -61,6 +61,21 @@ public class NameRewritingConvention :
 
         foreach (var entityType in entityTypeBuilder.Metadata.GetDerivedTypesInclusive())
         {
+            // There's no need to rewrite the name on the hierarchy root, since a mapping strategy change doesn't affect it (unlike the
+            // name on children). Doing this would also reset the name initially set by TableNameFromDbSetConvention.
+            if (entityType.GetRootType() == entityType)
+            {
+                // The one exception is for an abstract root type in TPC, where we must remove any previous table name annotation
+                // (e.g. transition from TPH->TPC), since having one isn't valid (the type isn't mapped to any table at all).
+                if (newMappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract)
+                {
+                    entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                    entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+                }
+
+                continue;
+            }
+
             entityTypeBuilder = entityType.Builder;
 
             // First, reset any rewritten name we previously set (e.g. when changing from TPH to TPT), and then rewrite the default name.
