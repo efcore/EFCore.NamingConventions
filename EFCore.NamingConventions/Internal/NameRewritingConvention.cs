@@ -310,7 +310,7 @@ public class NameRewritingConvention :
         IConventionKey oldPrincipalKey,
         IConventionContext<IReadOnlyList<IConventionProperty>> context)
     {
-        if (relationshipBuilder.Metadata.GetDefaultName() is { } constraintName)
+        if (relationshipBuilder.Metadata.GetDefaultName() is { } constraintName && relationshipBuilder.Metadata.IsInModel)
         {
             relationshipBuilder.HasConstraintName(_namingNameRewriter.RewriteName(constraintName));
         }
