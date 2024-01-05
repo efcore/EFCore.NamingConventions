@@ -99,11 +99,21 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
-    public void Foreign_key()
+    public void Foreign_key_collection_navigation()
     {
         var model = BuildModel(b => b.Entity<Blog>());
         var entityType = model.FindEntityType(typeof(Post))!;
         Assert.Equal("fk_post_blog_blog_id", entityType.GetForeignKeys().Single().GetConstraintName());
+    }
+
+    [Fact]
+    public void Foreign_key_reference_navigation()
+    {
+        var model = BuildModel(b => b.Entity<ReferenceNavigationPrincipal>());
+        var entityType = model.FindEntityType(typeof(ReferenceNavigationDependent))!;
+        Assert.Equal(
+            "fk_reference_navigation_dependent_reference_navigation_principal_principal_id",
+            entityType.GetForeignKeys().Single().GetConstraintName());
     }
 
     [Fact]
@@ -815,6 +825,19 @@ public class NameRewritingConventionTest
     {
         public double Longitude { get; set; }
         public double Latitude { get; set; }
+    }
+
+    public class ReferenceNavigationPrincipal
+    {
+        public int Id { get; set; }
+        public ReferenceNavigationDependent Dependent { get; set; }
+    }
+
+    public class ReferenceNavigationDependent
+    {
+        public int Id { get; set; }
+        public int PrincipalId { get; set; }
+        public ReferenceNavigationPrincipal Principal { get; set; }
     }
 
     public class Board
