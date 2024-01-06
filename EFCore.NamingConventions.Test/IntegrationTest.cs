@@ -17,24 +17,45 @@ namespace EFCore.NamingConventions.Test
             using var context = new BlogContext();
             var entityType = context.Model.FindEntityType(typeof(Blog))!;
             Assert.Equal("blogs", entityType.GetTableName());
+
+            var property = entityType.FindProperty(nameof(Blog.BlogProperty))!;
+            Assert.Equal("blog_property", property.GetColumnName());
+
+            var index = Assert.Single(entityType.GetIndexes());
+            Assert.Equal("ix_blogs_blog_property", index.GetDatabaseName());
         }
 
         [Fact]
         public void Table_name_is_taken_from_DbSet_property_with_TPH()
         {
             using var context = new TphBlogContext();
-            Assert.Equal("blogs", context.Model.FindEntityType(typeof(Blog))!.GetTableName());
-            Assert.Equal("blogs", context.Model.FindEntityType(typeof(SpecialBlog))!.GetTableName());
+
+            var blogEntityType = context.Model.FindEntityType(typeof(Blog))!;
+            var specialBlogEntityType = context.Model.FindEntityType(typeof(SpecialBlog))!;
+
+            Assert.Equal("blogs", blogEntityType.GetTableName());
+            Assert.Equal("blogs", specialBlogEntityType.GetTableName());
+
+            var blogProperty = blogEntityType.FindProperty(nameof(Blog.BlogProperty))!;
+            Assert.Equal("blog_property", blogProperty.GetColumnName());
+            var specialBlogProperty = specialBlogEntityType.FindProperty(nameof(SpecialBlog.SpecialBlogProperty))!;
+            Assert.Equal("special_blog_property", specialBlogProperty.GetColumnName());
+
+            var blogIndex = Assert.Single(blogEntityType.GetIndexes());
+            Assert.Equal("ix_blogs_blog_property", blogIndex.GetDatabaseName());
+            var specialBlogIndex = Assert.Single(specialBlogEntityType.GetDeclaredIndexes());
+            Assert.Equal("ix_blogs_special_blog_property", specialBlogIndex.GetDatabaseName());
         }
 
         public class Blog
         {
             public int Id { get; set; }
+            public string BlogProperty { get; set; }
         }
 
         public class SpecialBlog : Blog
         {
-            public string SpecialProperty { get; set; }
+            public string SpecialBlogProperty { get; set; }
         }
 
         public class BlogContext : DbContext
@@ -43,6 +64,9 @@ namespace EFCore.NamingConventions.Test
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+                => modelBuilder.Entity<Blog>().HasIndex(b => b.BlogProperty);
         }
 
         public class TphBlogContext : DbContext
@@ -52,6 +76,12 @@ namespace EFCore.NamingConventions.Test
 
             protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                 => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                modelBuilder.Entity<Blog>().HasIndex(b => b.BlogProperty);
+                modelBuilder.Entity<SpecialBlog>().HasIndex(b => b.SpecialBlogProperty);
+            }
         }
 
         #endregion Table_name_is_taken_from_DbSet_property
