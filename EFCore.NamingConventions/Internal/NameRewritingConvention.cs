@@ -59,6 +59,29 @@ public class NameRewritingConvention :
     {
         var newMappingStrategy = entityTypeBuilder.Metadata.GetRootType().GetMappingStrategy();
 
+        // When a new type enters a TPC hierarchy, we must clear out the names of all indexes on parent entity types.
+        // Indexes on parent indexes get applied for each concrete child (and the parent, if concrete); in other
+        // words, the same index metadata is shared across multiple entity types mapped to different tables.
+        // However, EF doesn't yet support configuring different names for the same index when it's applied to different tables (children),
+        // so we can't rewrite.
+        // So instead, we clear any previously rewritten names (e.g. from the default TPH setup, assuming we're transitioning from TPH to
+        // TPC), from all indexes on parent entity types, to ensure that the index at least gets different names when applied to each table
+        // (otherwise the same name is used, leading to a conflict).
+        // For TPH and TPT this isn't a problem, since the same index never gets shared across different tables.
+        // See #245.
+        if (newMappingStrategy == RelationalAnnotationNames.TpcMappingStrategy)
+        {
+            foreach (var index in entityTypeBuilder.Metadata.GetIndexes())
+            {
+                index.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+            }
+
+            foreach (var foreignKey in entityTypeBuilder.Metadata.GetForeignKeys())
+            {
+                foreignKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+            }
+        }
+
         foreach (var entityType in entityTypeBuilder.Metadata.GetDerivedTypesInclusive())
         {
             // There's no need to rewrite the name on the hierarchy root, since a mapping strategy change doesn't affect it (unlike the
@@ -244,7 +267,7 @@ public class NameRewritingConvention :
                     }
                 }
 
-                foreach (var foreignKey in entityType.GetForeignKeys())
+                foreach (var foreignKey in entityType.GetDeclaredForeignKeys())
                 {
                     if (foreignKey.GetDefaultName() is { } foreignKeyName)
                     {
@@ -252,15 +275,9 @@ public class NameRewritingConvention :
                     }
                 }
 
-                foreach (var index in entityType.GetIndexes())
+                foreach (var index in entityType.GetDeclaredIndexes())
                 {
-                    // EF doesn't yet support different names for the same index, applied to different children in the hierarchy.
-                    // As a result, we clear any previous rewritten name (e.g. from the default TPH setup, assuming we're transitioning
-                    // from TPH to TPC), and then only rewrite names if the index is declared on our entity type, and not inherited.
-                    // See #245.
-                    index.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
-
-                    if (index.DeclaringEntityType == entityType && index.GetDefaultDatabaseName() is { } indexName)
+                    if (index.GetDefaultDatabaseName() is { } indexName)
                     {
                         index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
                     }
