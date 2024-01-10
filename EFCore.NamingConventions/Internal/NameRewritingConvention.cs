@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 
 namespace EFCore.NamingConventions.Internal;
 
@@ -24,10 +25,38 @@ public class NameRewritingConvention :
     private static readonly StoreObjectType[] _storeObjectTypes
         = { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery };
 
+    private readonly IDictionary<Type, string> _sets;
     private readonly INameRewriter _namingNameRewriter;
 
-    public NameRewritingConvention(INameRewriter nameRewriter)
-        => _namingNameRewriter = nameRewriter;
+    public NameRewritingConvention(ProviderConventionSetBuilderDependencies dependencies, INameRewriter nameRewriter)
+    {
+        _namingNameRewriter = nameRewriter;
+
+        // Copied from TableNameFromDbSetConvention
+        _sets = new Dictionary<Type, string>();
+        List<Type>? ambiguousTypes = null;
+        foreach (var set in dependencies.SetFinder.FindSets(dependencies.ContextType))
+        {
+            if (!_sets.ContainsKey(set.Type))
+            {
+                _sets.Add(set.Type, set.Name);
+            }
+            else
+            {
+                ambiguousTypes ??= new List<Type>();
+
+                ambiguousTypes.Add(set.Type);
+            }
+        }
+
+        if (ambiguousTypes != null)
+        {
+            foreach (var type in ambiguousTypes)
+            {
+                _sets.Remove(type);
+            }
+        }
+    }
 
     public virtual void ProcessEntityTypeAdded(
         IConventionEntityTypeBuilder entityTypeBuilder,
@@ -84,21 +113,6 @@ public class NameRewritingConvention :
 
         foreach (var entityType in entityTypeBuilder.Metadata.GetDerivedTypesInclusive())
         {
-            // There's no need to rewrite the name on the hierarchy root, since a mapping strategy change doesn't affect it (unlike the
-            // name on children). Doing this would also reset the name initially set by TableNameFromDbSetConvention.
-            if (entityType.GetRootType() == entityType)
-            {
-                // The one exception is for an abstract root type in TPC, where we must remove any previous table name annotation
-                // (e.g. transition from TPH->TPC), since having one isn't valid (the type isn't mapped to any table at all).
-                if (newMappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract)
-                {
-                    entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.TableName);
-                    entityTypeBuilder.HasNoAnnotation(RelationalAnnotationNames.Schema);
-                }
-
-                continue;
-            }
-
             entityTypeBuilder = entityType.Builder;
 
             // First, reset any rewritten name we previously set (e.g. when changing from TPH to TPT), and then rewrite the default name.
@@ -109,7 +123,7 @@ public class NameRewritingConvention :
 
             if (!(newMappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.ClrType.IsAbstract))
             {
-                if (entityType.GetTableName() is { } tableName)
+                if (GetDefaultTableName(entityType) is { } tableName)
                 {
                     entityTypeBuilder.ToTable(_namingNameRewriter.RewriteName(tableName), entityType.GetSchema());
                 }
@@ -121,6 +135,11 @@ public class NameRewritingConvention :
                 }
             }
         }
+
+        string? GetDefaultTableName(IConventionEntityType entityType)
+            => !entityType.HasSharedClrType && _sets.TryGetValue(entityType.ClrType, out var setName)
+                ? setName
+                : entityType.GetTableName();
     }
 
     public virtual void ProcessPropertyAdded(
@@ -234,6 +253,8 @@ public class NameRewritingConvention :
             case RelationalAnnotationNames.TableName
                 when StoreObjectIdentifier.Create(entityType, StoreObjectType.Table) is StoreObjectIdentifier tableIdentifier:
             {
+                var mappingStrategy = entityType.GetMappingStrategy();
+
                 if (entityType.FindPrimaryKey() is IConventionKey primaryKey)
                 {
                     // We need to rewrite the PK name.
@@ -269,7 +290,12 @@ public class NameRewritingConvention :
 
                 foreach (var foreignKey in entityType.GetDeclaredForeignKeys())
                 {
-                    if (foreignKey.GetDefaultName() is { } foreignKeyName)
+                    // See note in ProcessHierarchyChange on indexes and foreign keys in TPC hierarchies
+                    if (mappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.GetDerivedTypes().Any())
+                    {
+                        foreignKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                    }
+                    else if (foreignKey.GetDefaultName() is { } foreignKeyName)
                     {
                         foreignKey.Builder.HasConstraintName(_namingNameRewriter.RewriteName(foreignKeyName));
                     }
@@ -277,7 +303,12 @@ public class NameRewritingConvention :
 
                 foreach (var index in entityType.GetDeclaredIndexes())
                 {
-                    if (index.GetDefaultDatabaseName() is { } indexName)
+                    // See note in ProcessHierarchyChange on indexes and foreign keys in TPC hierarchies
+                    if (mappingStrategy == RelationalAnnotationNames.TpcMappingStrategy && entityType.GetDerivedTypes().Any())
+                    {
+                        index.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                    }
+                    else if (index.GetDefaultDatabaseName() is { } indexName)
                     {
                         index.Builder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
                     }
@@ -359,6 +390,27 @@ public class NameRewritingConvention :
     {
         foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
         {
+            // Copied from TableNameFromDbSetConvention
+            if (entityType.GetTableName() != null
+                && _sets.ContainsKey(entityType.ClrType))
+            {
+                // if (entityType.GetViewNameConfigurationSource() != null)
+                // {
+                //     // Undo the convention change if the entity type is mapped to a view
+                //     entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                // }
+
+                switch (entityType.GetMappingStrategy())
+                {
+                    // Undo the convention change if the entity type is mapped using TPC
+                    case RelationalAnnotationNames.TpcMappingStrategy when entityType.IsAbstract():
+                    // Undo the convention change if the hierarchy ultimately ends up TPH
+                    case RelationalAnnotationNames.TphMappingStrategy when entityType.BaseType is not null:
+                        entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                        break;
+                }
+            }
+
             foreach (var property in entityType.GetProperties())
             {
                 var columnName = property.GetColumnName();
