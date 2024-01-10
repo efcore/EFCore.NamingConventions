@@ -12,15 +12,18 @@ namespace EFCore.NamingConventions.Test
         [Fact]
         public void ModifyConventions_without_extensions_not_throw_exception()
         {
-            var conventionSet = SqlServerTestHelpers
+            var services = SqlServerTestHelpers
                 .Instance
-                .CreateContextServices()
+                .CreateContextServices();
+
+            var conventionSet = services
                 .GetRequiredService<IConventionSetBuilder>()
                 .CreateConventionSet();
 
+            var dependencies = services.GetRequiredService<ProviderConventionSetBuilderDependencies>();
             var optionsBuilder = new DbContextOptionsBuilder();
             SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
-            var plugin = new NamingConventionSetPlugin(optionsBuilder.Options);
+            var plugin = new NamingConventionSetPlugin(dependencies, optionsBuilder.Options);
 
             var exception = Record.Exception(() => plugin.ModifyConventions(conventionSet));
 

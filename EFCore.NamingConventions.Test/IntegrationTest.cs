@@ -47,6 +47,28 @@ namespace EFCore.NamingConventions.Test
             Assert.Equal("ix_blogs_special_blog_property", specialBlogIndex.GetDatabaseName());
         }
 
+        [Fact]
+        public void Table_name_is_taken_from_DbSet_property_with_TPT()
+        {
+            using var context = new TptBlogContext();
+
+            var blogEntityType = context.Model.FindEntityType(typeof(Blog))!;
+            var specialBlogEntityType = context.Model.FindEntityType(typeof(SpecialBlog))!;
+
+            Assert.Equal("blogs", blogEntityType.GetTableName());
+            Assert.Equal("special_blogs", specialBlogEntityType.GetTableName());
+
+            var blogProperty = blogEntityType.FindProperty(nameof(Blog.BlogProperty))!;
+            Assert.Equal("blog_property", blogProperty.GetColumnName());
+            var specialBlogProperty = specialBlogEntityType.FindProperty(nameof(SpecialBlog.SpecialBlogProperty))!;
+            Assert.Equal("special_blog_property", specialBlogProperty.GetColumnName());
+
+            var blogIndex = Assert.Single(blogEntityType.GetIndexes());
+            Assert.Equal("ix_blogs_blog_property", blogIndex.GetDatabaseName());
+            var specialBlogIndex = Assert.Single(specialBlogEntityType.GetDeclaredIndexes());
+            Assert.Equal("ix_special_blogs_special_blog_property", specialBlogIndex.GetDatabaseName());
+        }
+
         public class Blog
         {
             public int Id { get; set; }
@@ -81,6 +103,23 @@ namespace EFCore.NamingConventions.Test
             {
                 modelBuilder.Entity<Blog>().HasIndex(b => b.BlogProperty);
                 modelBuilder.Entity<SpecialBlog>().HasIndex(b => b.SpecialBlogProperty);
+            }
+        }
+
+        public class TptBlogContext : DbContext
+        {
+            public DbSet<Blog> Blogs { get; set; } = null!;
+            public DbSet<SpecialBlog> SpecialBlogs { get; set; } = null!;
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+                => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention();
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                modelBuilder.Entity<Blog>().HasIndex(b => b.BlogProperty);
+                modelBuilder.Entity<SpecialBlog>().HasIndex(b => b.SpecialBlogProperty);
+
+                modelBuilder.Entity<Blog>().UseTptMappingStrategy();
             }
         }
 

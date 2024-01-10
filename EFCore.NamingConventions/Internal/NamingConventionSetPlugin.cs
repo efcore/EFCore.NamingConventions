@@ -9,8 +9,16 @@ namespace EFCore.NamingConventions.Internal;
 
 public class NamingConventionSetPlugin : IConventionSetPlugin
 {
+    private readonly ProviderConventionSetBuilderDependencies _dependencies;
     private readonly IDbContextOptions _options;
-    public NamingConventionSetPlugin(IDbContextOptions options) => _options = options;
+
+    public NamingConventionSetPlugin(
+        ProviderConventionSetBuilderDependencies dependencies,
+        IDbContextOptions options)
+    {
+        _dependencies = dependencies;
+        _options = options;
+    }
 
     public ConventionSet ModifyConventions(ConventionSet conventionSet)
     {
@@ -23,7 +31,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
             return conventionSet;
         }
 
-        var convention = new NameRewritingConvention(namingStyle switch
+        var convention = new NameRewritingConvention(_dependencies, namingStyle switch
         {
             NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
             NamingConvention.LowerCase => new LowerCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),

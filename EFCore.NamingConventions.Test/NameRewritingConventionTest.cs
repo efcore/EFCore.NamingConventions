@@ -705,16 +705,20 @@ public class NameRewritingConventionTest
 
     private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
     {
-        var conventionSet = SqlServerTestHelpers
+        var services = SqlServerTestHelpers
             .Instance
-            .CreateContextServices()
+            .CreateContextServices();
+
+        var conventionSet = services
             .GetRequiredService<IConventionSetBuilder>()
             .CreateConventionSet();
+
+        var dependencies = services.GetRequiredService<ProviderConventionSetBuilderDependencies>();
 
         var optionsBuilder = new DbContextOptionsBuilder();
         SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
         optionsBuilder.UseSnakeCaseNamingConvention(culture);
-        var plugin = new NamingConventionSetPlugin(optionsBuilder.Options);
+        var plugin = new NamingConventionSetPlugin(dependencies, optionsBuilder.Options);
         plugin.ModifyConventions(conventionSet);
 
         var modelBuilder = new ModelBuilder(conventionSet);
