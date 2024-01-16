@@ -169,19 +169,32 @@ public class NameRewritingConvention :
 
             if (ownedEntityType.IsMappedToJson())
             {
-                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
-                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+                ProcessJsonOwnedEntity(ownedEntityType, ownedEntityType.GetContainerColumnName());
 
-                if (ownedEntityType.GetContainerColumnName() is string containerColumnName)
+                void ProcessJsonOwnedEntity(IConventionEntityType entityType, string? containerColumnName)
                 {
-                    ownedEntityType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
-                }
+                    entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                    entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
 
-                // TODO: Note that we do not rewrite names of JSON properties (which aren't relational columns).
-                // TODO: We could introduce an option for doing so, though that's probably not usually what people want when doing JSON
-                foreach (var property in ownedEntityType.GetProperties())
-                {
-                    property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+                    if (containerColumnName is not null)
+                    {
+                        entityType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
+                    }
+
+                    // TODO: Note that we do not rewrite names of JSON properties (which aren't relational columns).
+                    // TODO: We could introduce an option for doing so, though that's probably not usually what people want when doing JSON
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+                    }
+
+                    // ToJson() may be called only on the top-most owned entity; but we need to recurse and propagate the changes to the
+                    // entire owned tree.
+                    foreach (var navigation in entityType.GetNavigations()
+                                 .Where(n => n is { IsOnDependent: false, ForeignKey.IsOwnership: true }))
+                    {
+                        ProcessJsonOwnedEntity(navigation.TargetEntityType, containerColumnName);
+                    }
                 }
             }
             else

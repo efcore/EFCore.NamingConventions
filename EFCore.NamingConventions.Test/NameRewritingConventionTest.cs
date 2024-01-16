@@ -649,6 +649,30 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Owned_json_entity_with_OnesOne_and_nested_OwnsMany()
+    {
+        var model = BuildModel(mb => mb.Entity<Owner>().OwnsOne(o => o.Owned, p =>
+        {
+            p.OwnsMany(o => o.NestedOwnedCollection);
+            p.ToJson();
+        }));
+
+        var ownerEntityType = model.FindEntityType(typeof(Owner))!;
+        var ownedEntityType = model.FindEntityType(typeof(Owned))!;
+        var nestedOwnedCollectionEntityType = model.FindEntityType(typeof(NestedOwned))!;
+
+        Assert.Equal("owner", ownerEntityType.GetTableName());
+
+        Assert.Equal("owner", ownedEntityType.GetTableName());
+        Assert.Null(ownedEntityType.FindPrimaryKey()!.GetName());
+        Assert.Equal("owned", ownedEntityType.GetContainerColumnName());
+
+        Assert.Equal("owner", nestedOwnedCollectionEntityType.GetTableName());
+        Assert.Null(ownedEntityType.FindPrimaryKey()!.GetName());
+        Assert.Equal("owned", ownedEntityType.GetContainerColumnName());
+    }
+
+    [Fact]
     public void Complex_property()
     {
         var model = BuildModel(b => b.Entity<Waypoint>().ComplexProperty(w => w.Location));
@@ -817,6 +841,13 @@ public class NameRewritingConventionTest
     public class Owned
     {
         public int OwnedProperty { get; set; }
+        [NotMapped]
+        public required List<NestedOwned> NestedOwnedCollection { get; set; }
+    }
+
+    public class NestedOwned
+    {
+        public int Foo { get; set; }
     }
 
     public class Waypoint
