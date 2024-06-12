@@ -1,7 +1,6 @@
 using System.Globalization;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using JetBrains.Annotations;
 using EFCore.NamingConventions.Internal;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.EntityFrameworkCore;
@@ -24,7 +23,7 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null)
+        this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo? culture = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
@@ -47,7 +46,7 @@ public static class NamingConventionsExtensions
         this DbContextOptionsBuilder<TContext> optionsBuilder,
         CultureInfo? culture = null)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder ,culture);
+        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
     public static DbContextOptionsBuilder UseUpperCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
@@ -111,4 +110,25 @@ public static class NamingConventionsExtensions
         CultureInfo? culture = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+
+    public static DbContextOptionsBuilder UseKebabCaseNamingConvention(
+        this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null)
+    {
+        Check.NotNull(optionsBuilder, nameof(optionsBuilder));
+
+        var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
+                ?? new NamingConventionsOptionsExtension())
+            .WithKebabCaseNamingConvention(culture);
+
+        ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+        return optionsBuilder;
+    }
+
+    public static DbContextOptionsBuilder<TContext> UseKebabCaseNamingConvention<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)UseKebabCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 }
