@@ -27,10 +27,12 @@ public class NameRewritingConvention :
 
     private readonly IDictionary<Type, string> _sets;
     private readonly INameRewriter _namingNameRewriter;
+    private readonly bool _ignoreMigrationHistoryTable;
 
-    public NameRewritingConvention(ProviderConventionSetBuilderDependencies dependencies, INameRewriter nameRewriter)
+    public NameRewritingConvention(ProviderConventionSetBuilderDependencies dependencies, INameRewriter nameRewriter, bool ignoreMigrationHistoryTable)
     {
         _namingNameRewriter = nameRewriter;
+        _ignoreMigrationHistoryTable = ignoreMigrationHistoryTable;
 
         // Copied from TableNameFromDbSetConvention
         _sets = new Dictionary<Type, string>();
@@ -63,6 +65,11 @@ public class NameRewritingConvention :
         IConventionContext<IConventionEntityTypeBuilder> context)
     {
         var entityType = entityTypeBuilder.Metadata;
+
+        if (_ignoreMigrationHistoryTable && entityType.GetTableName() == "__EFMigrationsHistory")
+        {
+            return;
+        }
 
         // Note that the table name returned here may be the result of TableNameFromDbSetConvention which ran before us.
         if (entityType.GetTableName() is { } tableName)
