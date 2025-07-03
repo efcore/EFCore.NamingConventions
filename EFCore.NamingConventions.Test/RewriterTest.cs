@@ -28,8 +28,19 @@ public class RewriterTest
 
     [Fact]
     public void Strip_entity_suffix()
-    {
-        Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullNameEntity"));
-        Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
-    }
+        => Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullNameEntity"));
+
+    [Fact]
+    public void Strip_entity_suffix_with_incorrect_case_should_not_rename()
+        => Assert.Equal("FullNameENtiTY", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullNameENtiTY"));
+
+    [Fact]
+    public void Strip_entity_suffix_without_suffix_should_not_rename()
+        => Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+
+    [Fact]
+    public void Strip_entity_suffix_whose_name_is_identical_to_suffix_should_not_rename()
+        => Assert.Equal("Entity", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("Entity"));
+
+
 }
