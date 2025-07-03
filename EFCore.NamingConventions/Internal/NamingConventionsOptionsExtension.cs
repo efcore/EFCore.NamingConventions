@@ -13,7 +13,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     private NamingConvention _namingConvention;
     private CultureInfo? _culture;
 
-    public NamingConventionsOptionsExtension() {}
+    public NamingConventionsOptionsExtension() { }
     protected NamingConventionsOptionsExtension(NamingConventionsOptionsExtension copyFrom)
     {
         _namingConvention = copyFrom._namingConvention;
@@ -74,7 +74,15 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
-    public void Validate(IDbContextOptions options) {}
+    public virtual NamingConventionsOptionsExtension WithStripEntitySuffixNamingConvention(CultureInfo? culture = null)
+    {
+        var clone = Clone();
+        clone._namingConvention = NamingConvention.StripEntitySuffix;
+        clone._culture = culture;
+        return clone;
+    }
+
+    public void Validate(IDbContextOptions options) { }
 
     public void ApplyServices(IServiceCollection services)
         => services.AddEntityFrameworkNamingConventions();
@@ -83,7 +91,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     {
         private string? _logFragment;
 
-        public ExtensionInfo(IDbContextOptionsExtension extension) : base(extension) {}
+        public ExtensionInfo(IDbContextOptionsExtension extension) : base(extension) { }
 
         private new NamingConventionsOptionsExtension Extension
             => (NamingConventionsOptionsExtension)base.Extension;
@@ -106,6 +114,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
                         NamingConvention.UpperCase => "using upper case naming",
                         NamingConvention.UpperSnakeCase => "using upper snake-case naming",
                         NamingConvention.CamelCase => "using camel-case naming",
+                        NamingConvention.StripEntitySuffix => "removing 'Entity' suffix from name if present",
                         _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + Extension._namingConvention)
                     });
 

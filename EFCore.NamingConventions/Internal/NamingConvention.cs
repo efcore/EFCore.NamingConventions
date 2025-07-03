@@ -7,5 +7,6 @@ public enum NamingConvention
     LowerCase,
     CamelCase,
     UpperCase,
-    UpperSnakeCase
+    UpperSnakeCase,
+    StripEntitySuffix
 }

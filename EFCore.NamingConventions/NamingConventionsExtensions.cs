@@ -24,7 +24,7 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null)
+        this DbContextOptionsBuilder<TContext> optionsBuilder, CultureInfo? culture = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
@@ -47,7 +47,7 @@ public static class NamingConventionsExtensions
         this DbContextOptionsBuilder<TContext> optionsBuilder,
         CultureInfo? culture = null)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder ,culture);
+        => (DbContextOptionsBuilder<TContext>)UseLowerCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 
     public static DbContextOptionsBuilder UseUpperCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
@@ -111,4 +111,25 @@ public static class NamingConventionsExtensions
         CultureInfo? culture = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+
+    public static DbContextOptionsBuilder UseStripEntitySuffixNamingConvention(
+        this DbContextOptionsBuilder optionsBuilder,
+        CultureInfo? culture = null)
+    {
+        Check.NotNull(optionsBuilder, nameof(optionsBuilder));
+
+        var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
+                ?? new NamingConventionsOptionsExtension())
+            .WithStripEntitySuffixNamingConvention(culture);
+
+        ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+        return optionsBuilder;
+    }
+
+    public static DbContextOptionsBuilder<TContext> UseStripEntitySuffixNamingConventionUseSuffixNamingConvention<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        CultureInfo? culture = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)UseStripEntitySuffixNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
 }

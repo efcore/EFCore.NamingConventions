@@ -25,4 +25,11 @@ public class RewriterTest
     [Fact]
     public void Upper_case()
         => Assert.Equal("FULLNAME", new UpperCaseNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+
+    [Fact]
+    public void Strip_entity_suffix()
+    {
+        Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullNameEntity"));
+        Assert.Equal("FullName", new StripEntitySuffixNameRewriter(CultureInfo.InvariantCulture).RewriteName("FullName"));
+    }
 }
