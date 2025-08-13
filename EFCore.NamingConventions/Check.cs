@@ -50,7 +50,7 @@ internal static class Check
         {
             NotEmpty(parameterName, nameof(parameterName));
 
-            throw new ArgumentException(AbstractionsStrings.CollectionArgumentIsEmpty(parameterName));
+            throw new ArgumentException(AbstractionsStrings.CollectionArgumentIsEmpty, parameterName);
         }
 
         return value;
@@ -70,7 +70,7 @@ internal static class Check
         {
             NotEmpty(parameterName, nameof(parameterName));
 
-            throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName));
+            throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty, parameterName);
         }
 
         return value;
@@ -82,7 +82,7 @@ internal static class Check
         {
             NotEmpty(parameterName, nameof(parameterName));
 
-            throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty(parameterName));
+            throw new ArgumentException(AbstractionsStrings.ArgumentIsEmpty, parameterName);
         }
 
         return value;
