@@ -1,6 +1,6 @@
+using System;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using JetBrains.Annotations;
 using EFCore.NamingConventions.Internal;
 
 // ReSharper disable once CheckNamespace
@@ -111,4 +111,25 @@ public static class NamingConventionsExtensions
         CultureInfo? culture = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)UseCamelCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+
+    public static DbContextOptionsBuilder UseCustomNamingConvention(
+        this DbContextOptionsBuilder optionsBuilder,
+        Func<string, string> mapping)
+    {
+        Check.NotNull(optionsBuilder, nameof(optionsBuilder));
+
+        var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
+                ?? new NamingConventionsOptionsExtension())
+            .WithCustomNamingConvention(mapping);
+
+        ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+        return optionsBuilder;
+    }
+
+    public static DbContextOptionsBuilder<TContext> UseCustomNamingConvention<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        Func<string, string> mapping)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)UseCustomNamingConvention((DbContextOptionsBuilder)optionsBuilder, mapping);
 }
