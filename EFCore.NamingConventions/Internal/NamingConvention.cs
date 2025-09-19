@@ -6,6 +6,7 @@ public enum NamingConvention
     SnakeCase,
     LowerCase,
     CamelCase,
+    KebabCase,
     UpperCase,
     UpperSnakeCase
 }
