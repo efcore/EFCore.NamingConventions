@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.SqlServer.Diagnostics.Internal;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,25 @@ public class NameRewritingConventionTest
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>());
         Assert.Equal("sample_entity_id", entityType.FindProperty(nameof(SampleEntity.SampleEntityId))!
             .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Theory]
+    [InlineData(true, "__EFMigrationsHistory", "MigrationId", "ProductVersion")]
+    [InlineData(false, "__EFMigrationsHistory", "migration_id", "product_version")]
+    public void ColumnInMigrationTable(bool ignoreMigrationTable, string tableName, string migrationIdName, string productVersionName)
+    {
+        var entityType = BuildEntityType(b => b.Entity<HistoryRow>(e => {
+            e.ToTable("__EFMigrationsHistory");
+            e.HasKey(h => h.MigrationId);
+            e.Property(h => h.MigrationId).HasMaxLength(150);
+            e.Property(h => h.ProductVersion).HasMaxLength(32).IsRequired();
+        }), ignoreMigrationTable: ignoreMigrationTable);
+
+        Assert.Equal(tableName, entityType.GetTableName());
+        Assert.Equal(migrationIdName, entityType.FindProperty(nameof(HistoryRow.MigrationId))
+           .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        Assert.Equal(productVersionName, entityType.FindProperty(nameof(HistoryRow.ProductVersion))
+           .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
     }
 
     [Fact]
@@ -724,10 +745,10 @@ public class NameRewritingConventionTest
         Assert.Equal("fk_card_board_board_id", entityType.GetForeignKeys().Single().GetConstraintName());
     }
 
-    private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
-        => BuildModel(builderAction, culture).GetEntityTypes().Single();
+    private IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null, bool ignoreMigrationTable = false)
+        => BuildModel(builderAction, culture, ignoreMigrationTable).GetEntityTypes().Single();
 
-    private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
+    private IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null, bool ignoreMigrationTable = false)
     {
         var services = SqlServerTestHelpers
             .Instance
@@ -741,7 +762,7 @@ public class NameRewritingConventionTest
 
         var optionsBuilder = new DbContextOptionsBuilder();
         SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
-        optionsBuilder.UseSnakeCaseNamingConvention(culture);
+        optionsBuilder.UseSnakeCaseNamingConvention(culture, ignoreMigrationTable);
         var plugin = new NamingConventionSetPlugin(dependencies, optionsBuilder.Options);
         plugin.ModifyConventions(conventionSet);
 
