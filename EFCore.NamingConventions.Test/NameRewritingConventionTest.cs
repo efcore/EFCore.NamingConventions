@@ -693,7 +693,6 @@ public class NameRewritingConventionTest
 
         var entityType = model.FindEntityType(typeof(Waypoint))!;
         var complexType = entityType.FindComplexProperty("Location")!.ComplexType;
-        var longitude = complexType.FindProperty("Longitude")!;
 
         Assert.Equal("Location", complexType.GetContainerColumnName());
 
