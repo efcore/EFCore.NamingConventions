@@ -687,6 +687,24 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Complex_property_ToJson()
+    {
+        var model = BuildModel(b => b.Entity<Waypoint>().ComplexProperty(w => w.Location).ToJson());
+
+        var entityType = model.FindEntityType(typeof(Waypoint))!;
+        var complexType = entityType.FindComplexProperty("Location")!.ComplexType;
+        var longitude = complexType.FindProperty("Longitude")!;
+
+        Assert.Equal("Location", complexType.GetContainerColumnName());
+
+        Assert.Equal("Longitude", complexType.FindProperty("Longitude")!.GetJsonPropertyName());
+        Assert.Equal("Latitude", complexType.FindProperty("Latitude")!.GetJsonPropertyName());
+
+        Assert.Null(complexType.FindProperty("Longitude")!.GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        Assert.Null(complexType.FindProperty("Latitude")!.GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
     public void Not_mapped_to_table()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToSqlQuery("SELECT foobar"));

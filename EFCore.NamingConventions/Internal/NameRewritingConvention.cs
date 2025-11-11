@@ -463,6 +463,26 @@ public class NameRewritingConvention :
                     }
                 }
             }
+
+            foreach (var complexProperty in entityType.GetComplexProperties())
+            {
+                if (complexProperty.ComplexType is IComplexType complexType && complexType.IsMappedToJson())
+                {
+                    foreach (var propertyInComplexType in complexType.GetProperties())
+                    {
+                        if (propertyInComplexType is IConventionProperty conventionProperty)
+                        {
+                            var configurationSource = conventionProperty.GetColumnNameConfigurationSource();
+
+                            if (configurationSource == ConfigurationSource.Convention)
+                            {
+                                // JSON properties are not relational columns, so we overwrite the column name that was set previously.
+                                conventionProperty.SetColumnName(null);
+                            }
+                        }
+                    }
+                }
+            }  
         }
     }
 
