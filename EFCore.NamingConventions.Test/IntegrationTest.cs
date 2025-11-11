@@ -72,12 +72,12 @@ namespace EFCore.NamingConventions.Test
         public class Blog
         {
             public int Id { get; set; }
-            public string BlogProperty { get; set; }
+            public string BlogProperty { get; set; } = null!;
         }
 
         public class SpecialBlog : Blog
         {
-            public string SpecialBlogProperty { get; set; }
+            public string SpecialBlogProperty { get; set; } = null!;
         }
 
         public class BlogContext : DbContext
