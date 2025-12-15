@@ -389,7 +389,7 @@ public class NameRewritingConvention :
         IConventionIndexBuilder indexBuilder,
         IConventionContext<IConventionIndexBuilder> context)
     {
-        if (indexBuilder.Metadata.GetDefaultDatabaseName() is { } indexName)
+        if (indexBuilder.Metadata.Name is null && indexBuilder.Metadata.GetDefaultDatabaseName() is { } indexName)
         {
             indexBuilder.HasDatabaseName(_namingNameRewriter.RewriteName(indexName));
         }
