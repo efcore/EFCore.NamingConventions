@@ -687,6 +687,47 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Complex_property_ToJson()
+    {
+        var model = BuildModel(b => b.Entity<Waypoint>().ComplexProperty(w => w.Location).ToJson());
+
+        var entityType = model.FindEntityType(typeof(Waypoint))!;
+        var complexType = entityType.FindComplexProperty("Location")!.ComplexType;
+
+        Assert.Equal("Location", complexType.GetContainerColumnName());
+
+        Assert.Equal("Longitude", complexType.FindProperty("Longitude")!.GetJsonPropertyName());
+        Assert.Equal("Latitude", complexType.FindProperty("Latitude")!.GetJsonPropertyName());
+
+        Assert.Null(complexType.FindProperty("Longitude")!.GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+        Assert.Null(complexType.FindProperty("Latitude")!.GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
+    public void Complex_property_with_nested_complex_property_ToJson()
+    {
+        var model = BuildModel(b =>
+        {
+            b.Entity<Project>().HasKey(w => w.Id);
+            b.Entity<Project>().ComplexProperty(w => w.Board).ToJson();
+        });
+
+        var entityType = model.FindEntityType(typeof(Project))!;
+        var boardComplexType = entityType.FindComplexProperty("Board")!.ComplexType;
+
+        Assert.Equal("Board", boardComplexType.GetContainerColumnName());
+
+        var cardsProperty = boardComplexType.FindComplexProperty("Cards")!;
+        Assert.Equal("Cards", cardsProperty.GetJsonPropertyName());
+
+        Assert.Null(
+            cardsProperty
+                .ComplexType.FindProperty("Name")!
+                .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value)
+        );
+    }
+	
+    [Fact]
     public void Not_mapped_to_table()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>().ToSqlQuery("SELECT foobar"));
@@ -875,6 +916,12 @@ public class NameRewritingConventionTest
         public ReferenceNavigationPrincipal Principal { get; set; }
     }
 
+    public class Project 
+    {
+        public int Id { get; }
+        public required Board Board { get; set; }
+    }
+
     public class Board
     {
         public int Id { get; }
@@ -884,6 +931,7 @@ public class NameRewritingConventionTest
     public class Card
     {
         public int Id { get; }
+        public string? Name { get; set; }
         public required Board Board { get; set; }
     }
 }
