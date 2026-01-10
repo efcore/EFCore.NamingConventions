@@ -865,14 +865,14 @@ public class NameRewritingConventionTest
     public class ReferenceNavigationPrincipal
     {
         public int Id { get; set; }
-        public ReferenceNavigationDependent Dependent { get; set; }
+        public required ReferenceNavigationDependent Dependent { get; set; }
     }
 
     public class ReferenceNavigationDependent
     {
         public int Id { get; set; }
         public int PrincipalId { get; set; }
-        public ReferenceNavigationPrincipal Principal { get; set; }
+        public required ReferenceNavigationPrincipal Principal { get; set; }
     }
 
     public class Board
