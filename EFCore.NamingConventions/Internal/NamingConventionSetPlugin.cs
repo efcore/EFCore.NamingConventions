@@ -43,6 +43,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
 
         conventionSet.EntityTypeAddedConventions.Add(convention);
         conventionSet.EntityTypeAnnotationChangedConventions.Add(convention);
+        conventionSet.ComplexTypeAnnotationChangedConventions.Add(convention);
         conventionSet.PropertyAddedConventions.Add(convention);
         conventionSet.ForeignKeyOwnershipChangedConventions.Add(convention);
         conventionSet.KeyAddedConventions.Add(convention);
