@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using EFCore.NamingConventions.Internal;
 using Xunit;
 
@@ -33,6 +32,7 @@ namespace EFCore.NamingConventions.Test
             NamingConvention.SnakeCase => new NamingConventionsOptionsExtension().WithSnakeCaseNamingConvention(),
             NamingConvention.LowerCase => new NamingConventionsOptionsExtension().WithLowerCaseNamingConvention(),
             NamingConvention.CamelCase => new NamingConventionsOptionsExtension().WithCamelCaseNamingConvention(),
+            NamingConvention.KebabCase => new NamingConventionsOptionsExtension().WithKebabCaseNamingConvention(),
             NamingConvention.UpperCase => new NamingConventionsOptionsExtension().WithUpperCaseNamingConvention(),
             NamingConvention.UpperSnakeCase => new NamingConventionsOptionsExtension().WithUpperSnakeCaseNamingConvention(),
             _ => throw new ArgumentOutOfRangeException($"Unhandled enum value: {convention}, NamingConventionsOptionsExtension not defined for the test")
