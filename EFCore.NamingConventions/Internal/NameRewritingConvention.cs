@@ -13,6 +13,7 @@ namespace EFCore.NamingConventions.Internal;
 public class NameRewritingConvention :
     IEntityTypeAddedConvention,
     IEntityTypeAnnotationChangedConvention,
+    IComplexTypeAnnotationChangedConvention,
     IPropertyAddedConvention,
     IForeignKeyOwnershipChangedConvention,
     IKeyAddedConvention,
@@ -23,9 +24,9 @@ public class NameRewritingConvention :
     IModelFinalizingConvention
 {
     private static readonly StoreObjectType[] _storeObjectTypes
-        = { StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery };
+        = [StoreObjectType.Table, StoreObjectType.View, StoreObjectType.Function, StoreObjectType.SqlQuery];
 
-    private readonly IDictionary<Type, string> _sets;
+    private readonly Dictionary<Type, string> _sets;
     private readonly INameRewriter _namingNameRewriter;
     private readonly bool _ignoreMigrationTable;
 
@@ -35,7 +36,7 @@ public class NameRewritingConvention :
         _ignoreMigrationTable = ignoreMigrationTable;
 
         // Copied from TableNameFromDbSetConvention
-        _sets = new Dictionary<Type, string>();
+        _sets = [];
         List<Type>? ambiguousTypes = null;
         foreach (var set in dependencies.SetFinder.FindSets(dependencies.ContextType))
         {
@@ -45,7 +46,7 @@ public class NameRewritingConvention :
             }
             else
             {
-                ambiguousTypes ??= new List<Type>();
+                ambiguousTypes ??= [];
 
                 ambiguousTypes.Add(set.Type);
             }
@@ -338,8 +339,8 @@ public class NameRewritingConvention :
 
                     // When the entity became owned, we prefixed all of its properties - we must now undo that.
                     foreach (var property in entityType.GetProperties()
-                                 .Except(entityType.FindPrimaryKey()?.Properties ?? Array.Empty<IConventionProperty>())
-                                 .Where(p => p.Builder.CanSetColumnName(null)))
+                        .Except(entityType.FindPrimaryKey()?.Properties ?? [])
+                        .Where(p => p.Builder.CanSetColumnName(null)))
                     {
                         RewriteColumnName(property.Builder);
                     }
@@ -354,6 +355,70 @@ public class NameRewritingConvention :
                 }
 
                 return;
+            }
+        }
+    }
+
+    public void ProcessComplexTypeAnnotationChanged(
+        IConventionComplexTypeBuilder complexTypeBuilder,
+        string name,
+        IConventionAnnotation? annotation,
+        IConventionAnnotation? oldAnnotation,
+        IConventionContext<IConventionAnnotation> context)
+    {
+        // Configuring a complex property as JSON (via ToJson()) sets the container column name.
+        // This is our trigger for knowing that a complex property was configured as JSON, or that its container column name changed.
+        if (name is RelationalAnnotationNames.ContainerColumnName)
+        {
+            var complexType = complexTypeBuilder.Metadata;
+
+            // Rewrite the container column name.
+            if (annotation?.Value is string containerColumnName)
+            {
+                complexType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
+            }
+            else
+            {
+                complexType.SetContainerColumnName(null);
+            }
+
+            // We also need to process all nested properties:
+            // * If a non-JSON complex type becomes configured as JSON, we must undo any rewriting we've done before.
+            // * If a JSON complex types becomes configure as non-JSON, we must redo rewrite.
+
+            if (oldAnnotation is not null && annotation is not null)
+            {
+                // The container column changed, but the complex type's mapping isn't changing (it's still JSON).
+                // Nothing to do to properties contained within.
+                return;
+            }
+
+            Debug.Assert(oldAnnotation is not null || annotation is not null);
+
+            var resetColumnNames = annotation is not null;
+
+            ProcessJsonComplexType(complexType);
+
+            void ProcessJsonComplexType(IConventionComplexType complexType)
+            {
+                // TODO: Note that we do not rewrite names of JSON properties (which aren't relational columns).
+                // TODO: We could introduce an option for doing so, though that's probably not usually what people want when doing JSON
+                foreach (var property in complexType.GetProperties())
+                {
+                    if (resetColumnNames)
+                    {
+                        property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+                    }
+                    else
+                    {
+                        RewriteColumnName(property.Builder);
+                    }
+                }
+
+                foreach (var complexProperty in complexType.GetComplexProperties())
+                {
+                    ProcessJsonComplexType(complexProperty.ComplexType);
+                }
             }
         }
     }
@@ -433,7 +498,7 @@ public class NameRewritingConvention :
                 if (columnName.StartsWith(entityType.ShortName() + '_', StringComparison.Ordinal))
                 {
                     property.Builder.HasColumnName(
-                        _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName.Substring(entityType.ShortName().Length));
+                        _namingNameRewriter.RewriteName(entityType.ShortName()) + columnName[entityType.ShortName().Length..]);
                 }
 
                 var storeObject = StoreObjectIdentifier.Create(entityType, StoreObjectType.Table);
@@ -450,8 +515,7 @@ public class NameRewritingConvention :
                     if (columnName.StartsWith(shortName + '_', StringComparison.Ordinal))
                     {
                         property.Builder.HasColumnName(
-                            _namingNameRewriter.RewriteName(shortName)
-                            + columnName.Substring(shortName.Length));
+                            _namingNameRewriter.RewriteName(shortName) + columnName[shortName.Length..]);
                     }
                 }
 
@@ -461,7 +525,7 @@ public class NameRewritingConvention :
                     if (columnName is not null && columnName.StartsWith(shortName + '_', StringComparison.Ordinal))
                     {
                         property.Builder.HasColumnName(
-                            _namingNameRewriter.RewriteName(shortName) + columnName.Substring(shortName.Length),
+                            _namingNameRewriter.RewriteName(shortName) + columnName[shortName.Length..],
                             storeObject.Value);
                     }
                 }

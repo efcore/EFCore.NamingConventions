@@ -8,10 +8,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
 
       - name: Test
         run: dotnet test
@@ -26,7 +26,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name == 'push' && startsWith(github.repository, 'efcore/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: EFCore.NamingConventions
           path: nupkgs
