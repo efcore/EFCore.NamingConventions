@@ -168,19 +168,37 @@ public class NameRewritingConvention :
             // does nothing.
             ownedEntityType.FindPrimaryKey()?.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
 
+            // Check if this entity is part of a JSON structure - either directly mapped to JSON or nested within one.
+            if (foreignKey.PrincipalEntityType.IsMappedToJson())
+            {
+                // Nested JSON entities are part of the parent's JSON structure, not their own database column.
+                // Clear any relational annotations that may have been set before the entity became part of JSON.
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+
+                foreach (var property in ownedEntityType.GetProperties())
+                {
+                    property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
+                }
+
+                context.StopProcessing();
+                return;
+            }
+
             if (ownedEntityType.IsMappedToJson())
             {
-                ProcessJsonOwnedEntity(ownedEntityType, ownedEntityType.GetContainerColumnName());
+                if (ownedEntityType.GetContainerColumnName() is { } containerColumnName)
+                {
+                    // Rewrite container column name only on the root JSON entity.
+                    ownedEntityType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
+                }
 
-                void ProcessJsonOwnedEntity(IConventionEntityType entityType, string? containerColumnName)
+                ProcessJsonOwnedEntity(ownedEntityType);
+
+                void ProcessJsonOwnedEntity(IConventionEntityType entityType)
                 {
                     entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
                     entityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
-
-                    if (containerColumnName is not null)
-                    {
-                        entityType.SetContainerColumnName(_namingNameRewriter.RewriteName(containerColumnName));
-                    }
 
                     // TODO: Note that we do not rewrite names of JSON properties (which aren't relational columns).
                     // TODO: We could introduce an option for doing so, though that's probably not usually what people want when doing JSON
@@ -194,7 +212,7 @@ public class NameRewritingConvention :
                     foreach (var navigation in entityType.GetNavigations()
                                  .Where(n => n is { IsOnDependent: false, ForeignKey.IsOwnership: true }))
                     {
-                        ProcessJsonOwnedEntity(navigation.TargetEntityType, containerColumnName);
+                        ProcessJsonOwnedEntity(navigation.TargetEntityType);
                     }
                 }
             }

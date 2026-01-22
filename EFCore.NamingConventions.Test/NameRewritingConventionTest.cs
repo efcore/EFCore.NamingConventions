@@ -673,6 +673,50 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Owned_json_entity_with_nested_owned_collection_can_compile_query()
+    {
+        // This test reproduces the issue from PR #347 where nested JSON owned entities
+        // caused an ArgumentNullException during query compilation in EF Core 10.
+        // The bug was that nested entities within a JSON structure were incorrectly
+        // having container column names set on them, which caused EF Core's query
+        // compilation to fail with: ArgumentNullException: Value cannot be null. (Parameter 'key')
+
+        var optionsBuilder = new DbContextOptionsBuilder<JsonOwnedContext>();
+        SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
+        optionsBuilder.UseSnakeCaseNamingConvention();
+
+        using var context = new JsonOwnedContext(optionsBuilder.Options);
+
+        // Without the fix, this would throw ArgumentNullException during query compilation.
+        // The fix ensures nested JSON entities don't get processed incorrectly.
+        var exception = Record.Exception(() =>
+        {
+            // The compilation happens when we create the query expression
+            _ = context.JsonOwners.ToQueryString();
+        });
+
+        // The query should compile successfully
+        Assert.Null(exception);
+
+        // Verify the model is configured correctly
+        var ownerEntityType = context.Model.FindEntityType(typeof(JsonOwner))!;
+        var detailsEntityType = context.Model.FindEntityType(typeof(JsonDetails))!;
+        var subDetailsEntityType = context.Model.FindEntityType(typeof(JsonSubDetail))!;
+
+        // Root entity should have snake_case table name (based on DbSet name)
+        Assert.Equal("json_owners", ownerEntityType.GetTableName());
+
+        // JSON root should have snake_case container column name
+        Assert.Equal("details", detailsEntityType.GetContainerColumnName());
+        Assert.Equal("json_owners", detailsEntityType.GetTableName());
+
+        // The nested JSON entity is part of the JSON structure
+        // It should have the same container column as the root JSON entity
+        Assert.Equal("details", subDetailsEntityType.GetContainerColumnName());
+        Assert.Equal("json_owners", subDetailsEntityType.GetTableName());
+    }
+
+    [Fact]
     public void Complex_property()
     {
         var model = BuildModel(b => b.Entity<Waypoint>().ComplexProperty(w => w.Location));
@@ -904,5 +948,38 @@ public class NameRewritingConventionTest
     {
         public int Id { get; }
         public required Board Board { get; set; }
+    }
+
+    public class JsonOwner
+    {
+        public int Id { get; set; }
+        public required JsonDetails Details { get; set; }
+    }
+
+    public class JsonDetails
+    {
+        public string? Name { get; set; }
+        public required List<JsonSubDetail> SubDetails { get; set; }
+    }
+
+    public class JsonSubDetail
+    {
+        public string? Value { get; set; }
+    }
+
+    public class JsonOwnedContext : DbContext
+    {
+        public JsonOwnedContext(DbContextOptions<JsonOwnedContext> options) : base(options) { }
+
+        public DbSet<JsonOwner> JsonOwners => Set<JsonOwner>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<JsonOwner>().OwnsOne(x => x.Details, details =>
+            {
+                details.ToJson();
+                details.OwnsMany(x => x.SubDetails);
+            });
+        }
     }
 }
