@@ -169,26 +169,24 @@ public class NameRewritingConvention :
             ownedEntityType.FindPrimaryKey()?.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
 
             // Check if this entity is part of a JSON structure - either directly mapped to JSON or nested within one.
-            var isNestedInJson = foreignKey.PrincipalEntityType.IsMappedToJson();
-
-            if (ownedEntityType.IsMappedToJson() || isNestedInJson)
+            if (foreignKey.PrincipalEntityType.IsMappedToJson())
             {
-                if (isNestedInJson)
+                // Nested JSON entities are part of the parent's JSON structure, not their own database column.
+                // Clear any relational annotations that may have been set before the entity became part of JSON.
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
+                ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
+
+                foreach (var property in ownedEntityType.GetProperties())
                 {
-                    // Nested JSON entities are part of the parent's JSON structure, not their own database column.
-                    // Clear any relational annotations that may have been set before the entity became part of JSON.
-                    ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.TableName);
-                    ownedEntityType.Builder.HasNoAnnotation(RelationalAnnotationNames.Schema);
-
-                    foreach (var property in ownedEntityType.GetProperties())
-                    {
-                        property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
-                    }
-
-                    context.StopProcessing();
-                    return;
+                    property.Builder.HasNoAnnotation(RelationalAnnotationNames.ColumnName);
                 }
 
+                context.StopProcessing();
+                return;
+            }
+
+            if (ownedEntityType.IsMappedToJson())
+            {
                 if (ownedEntityType.GetContainerColumnName() is { } containerColumnName)
                 {
                     // Rewrite container column name only on the root JSON entity.
