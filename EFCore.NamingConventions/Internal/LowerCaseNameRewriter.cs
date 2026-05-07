@@ -9,6 +9,6 @@ public class LowerCaseNameRewriter : INameRewriter
     public LowerCaseNameRewriter(CultureInfo culture)
         => _culture = culture;
 
-    public string RewriteName(string name)
-        => name.ToLower(_culture);
+    public string? RewriteName(string? name)
+        => name?.ToLower(_culture);
 }
