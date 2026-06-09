@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <EFCoreVersion>[10.0.7, 11.0.0)</EFCoreVersion>
-    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>10.0.9</MicrosoftExtensionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
