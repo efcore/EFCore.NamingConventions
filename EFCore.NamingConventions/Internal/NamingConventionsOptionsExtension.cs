@@ -12,12 +12,14 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     private DbContextOptionsExtensionInfo? _info;
     private NamingConvention _namingConvention;
     private CultureInfo? _culture;
+    private Func<string, string>? _customMapper;
 
     public NamingConventionsOptionsExtension() {}
     protected NamingConventionsOptionsExtension(NamingConventionsOptionsExtension copyFrom)
     {
         _namingConvention = copyFrom._namingConvention;
         _culture = copyFrom._culture;
+        _customMapper = copyFrom._customMapper;
     }
 
     public virtual DbContextOptionsExtensionInfo Info => _info ??= new ExtensionInfo(this);
@@ -26,11 +28,14 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
 
     internal virtual NamingConvention NamingConvention => _namingConvention;
     internal virtual CultureInfo? Culture => _culture;
+    internal virtual Func<string, string>? CustomerMapper => _customMapper;
 
     public virtual NamingConventionsOptionsExtension WithoutNaming()
     {
         var clone = Clone();
         clone._namingConvention = NamingConvention.None;
+        clone._culture = null;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -39,6 +44,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.SnakeCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -47,6 +53,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.LowerCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -55,6 +62,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -63,6 +71,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.UpperSnakeCase;
         clone._culture = culture;
+        clone._customMapper = null;
         return clone;
     }
 
@@ -71,6 +80,16 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         var clone = Clone();
         clone._namingConvention = NamingConvention.CamelCase;
         clone._culture = culture;
+        clone._customMapper = null;
+        return clone;
+    }
+
+    public virtual NamingConventionsOptionsExtension WithCustomNamingConvention(Func<string, string> mapping)
+    {
+        var clone = Clone();
+        clone._namingConvention = NamingConvention.Custom;
+        clone._culture = null;
+        clone._customMapper = mapping;
         return clone;
     }
 
