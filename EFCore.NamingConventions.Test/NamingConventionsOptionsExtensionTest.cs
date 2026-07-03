@@ -35,6 +35,7 @@ namespace EFCore.NamingConventions.Test
             NamingConvention.CamelCase => new NamingConventionsOptionsExtension().WithCamelCaseNamingConvention(),
             NamingConvention.UpperCase => new NamingConventionsOptionsExtension().WithUpperCaseNamingConvention(),
             NamingConvention.UpperSnakeCase => new NamingConventionsOptionsExtension().WithUpperSnakeCaseNamingConvention(),
+            NamingConvention.ProperSnakeCase => new NamingConventionsOptionsExtension().WithProperSnakeCaseNamingConvention(),
             _ => throw new ArgumentOutOfRangeException($"Unhandled enum value: {convention}, NamingConventionsOptionsExtension not defined for the test")
         };
     }

@@ -74,6 +74,14 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
+    public virtual NamingConventionsOptionsExtension WithProperSnakeCaseNamingConvention(CultureInfo? culture = null)
+    {
+        var clone = Clone();
+        clone._namingConvention = NamingConvention.ProperSnakeCase;
+        clone._culture = culture;
+        return clone;
+    }
+
     public void Validate(IDbContextOptions options) {}
 
     public void ApplyServices(IServiceCollection services)
@@ -106,6 +114,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
                         NamingConvention.UpperCase => "using upper case naming",
                         NamingConvention.UpperSnakeCase => "using upper snake-case naming",
                         NamingConvention.CamelCase => "using camel-case naming",
+                        NamingConvention.ProperSnakeCase => "using proper snake-case naming",
                         _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + Extension._namingConvention)
                     });
 
