@@ -2,11 +2,19 @@ version: 2
 updates:
   - package-ecosystem: "nuget"
     directory: "/"
-    open-pull-requests-limit: 100
+    versioning-strategy: "increase"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      all-nuget-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    groups:
+      all-github-actions:
+        patterns:
+          - "*"
