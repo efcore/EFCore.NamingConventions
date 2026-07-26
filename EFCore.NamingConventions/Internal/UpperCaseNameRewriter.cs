@@ -9,6 +9,6 @@ public class UpperCaseNameRewriter : INameRewriter
     public UpperCaseNameRewriter(CultureInfo culture)
         => _culture = culture;
 
-    public string RewriteName(string name)
-        => name.ToUpper(_culture);
+    public string? RewriteName(string? name)
+        => name?.ToUpper(_culture);
 }
