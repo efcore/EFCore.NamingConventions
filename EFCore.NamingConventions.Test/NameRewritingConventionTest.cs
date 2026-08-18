@@ -43,6 +43,17 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Column_with_legacy_snake_case()
+    {
+        var entityType = BuildEntityType(
+            b => b.Entity<SampleEntityLegacySnakeCase>(),
+            CultureInfo.InvariantCulture,
+            true);
+        Assert.Equal("xml2linq", entityType.FindProperty(nameof(SampleEntityLegacySnakeCase.Xml2Linq))!
+            .GetColumnName(StoreObjectIdentifier.Create(entityType, StoreObjectType.Table)!.Value));
+    }
+
+    [Fact]
     public void Column_with_invariant_culture()
     {
         var entityType = BuildEntityType(
@@ -787,10 +798,10 @@ public class NameRewritingConventionTest
         Assert.Equal("fk_card_board_board_id", entityType.GetForeignKeys().Single().GetConstraintName());
     }
 
-    private static IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
-        => BuildModel(builderAction, culture).GetEntityTypes().Single();
+    private static IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null, bool legacySnakeCase = false)
+        => BuildModel(builderAction, culture, legacySnakeCase).GetEntityTypes().Single();
 
-    private static IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
+    private static IModel BuildModel(Action<ModelBuilder> builderAction, CultureInfo? culture = null, bool legacySnakeCase = false)
     {
         var services = SqlServerTestHelpers
             .Instance
@@ -804,7 +815,7 @@ public class NameRewritingConventionTest
 
         var optionsBuilder = new DbContextOptionsBuilder();
         SqlServerTestHelpers.Instance.UseProviderOptions(optionsBuilder);
-        optionsBuilder.UseSnakeCaseNamingConvention(culture);
+        optionsBuilder.UseSnakeCaseNamingConvention(culture, legacySnakeCase);
         var plugin = new NamingConventionSetPlugin(dependencies, optionsBuilder.Options);
         plugin.ModifyConventions(conventionSet);
 
@@ -826,6 +837,13 @@ public class NameRewritingConventionTest
         public int SampleEntityId { get; set; }
         public int SomeProperty { get; set; }
     }
+
+    public class SampleEntityLegacySnakeCase
+    {
+        public int SampleEntityLegacySnakeCaseId { get; set; }
+        public int Xml2Linq { get; set; }
+    }
+
 
     public class Blog
     {
