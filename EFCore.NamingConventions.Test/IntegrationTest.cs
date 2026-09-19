@@ -174,5 +174,51 @@ namespace EFCore.NamingConventions.Test
         public class TestService : ITestService;
 
         #endregion Multiple_DbContexts_with_external_di_does_not_throw
+
+        #region IgnoreMigrationHistoryTable
+
+        [Fact]
+        public void IgnoreMigrationHistoryTable()
+        {
+            using var context = new IgnoreMigrationHistoryTableContext();
+            var entityType = context.Model.FindEntityType(typeof(IgnoreMigrationHistoryTableEntity))!;
+            Assert.Equal("ignore_migration_history_table_entities", entityType.GetTableName());
+
+            var property = entityType.FindProperty(nameof(IgnoreMigrationHistoryTableEntity.IgnoreMigrationHistoryTableProperty))!;
+            Assert.Equal("ignore_migration_history_table_property", property.GetColumnName());
+
+            var index = Assert.Single(entityType.GetIndexes());
+            Assert.Equal("ix_ignore_migration_history_table_entities_ignore_migration_history_table_property", index.GetDatabaseName());
+
+            var migrationHistoryEntityType = context.Model.FindEntityType(typeof(MigrationHistory))!;
+            Assert.Equal("__EFMigrationsHistory", migrationHistoryEntityType.GetTableName());
+
+            var migrationHistoryProperty = migrationHistoryEntityType.FindProperty(nameof(MigrationHistory.MigrationId))!;
+            Assert.Equal("MigrationId", migrationHistoryProperty.GetColumnName());
+        }
+
+        public class IgnoreMigrationHistoryTableEntity
+        {
+            public int Id { get; set; }
+            public string IgnoreMigrationHistoryTableProperty { get; set; }
+        }
+
+        public class MigrationHistory
+        {
+            public string MigrationId { get; set; }
+        }
+
+        public class IgnoreMigrationHistoryTableContext : DbContext
+        {
+            public DbSet<IgnoreMigrationHistoryTableEntity> IgnoreMigrationHistoryTableEntities { get; set; } = null!;
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+                => optionsBuilder.UseSqlServer("foo").UseSnakeCaseNamingConvention(ignoreMigrationHistoryTable: true);
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+                => modelBuilder.Entity<IgnoreMigrationHistoryTableEntity>().HasIndex(e => e.IgnoreMigrationHistoryTableProperty);
+        }
+
+        #endregion IgnoreMigrationHistoryTable
     }
 }
