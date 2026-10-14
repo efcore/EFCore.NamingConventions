@@ -12,12 +12,14 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
     private DbContextOptionsExtensionInfo? _info;
     private NamingConvention _namingConvention;
     private CultureInfo? _culture;
+    private bool _legacySnakeCase;
 
     public NamingConventionsOptionsExtension() {}
     protected NamingConventionsOptionsExtension(NamingConventionsOptionsExtension copyFrom)
     {
         _namingConvention = copyFrom._namingConvention;
         _culture = copyFrom._culture;
+        _legacySnakeCase = copyFrom._legacySnakeCase;
     }
 
     public virtual DbContextOptionsExtensionInfo Info => _info ??= new ExtensionInfo(this);
@@ -26,6 +28,7 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
 
     internal virtual NamingConvention NamingConvention => _namingConvention;
     internal virtual CultureInfo? Culture => _culture;
+    internal virtual bool LegacySnakeCase => _legacySnakeCase;
 
     public virtual NamingConventionsOptionsExtension WithoutNaming()
     {
@@ -74,6 +77,13 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
         return clone;
     }
 
+    public virtual NamingConventionsOptionsExtension WithLegacySnakeCase(bool legacySnakeCase)
+    {
+        var clone = Clone();
+        clone._legacySnakeCase = legacySnakeCase;
+        return clone;
+    }
+
     public void Validate(IDbContextOptions options) {}
 
     public void ApplyServices(IServiceCollection services)
@@ -117,6 +127,10 @@ public class NamingConventionsOptionsExtension : IDbContextOptionsExtension
                             .Append(")");
                     }
 
+                    if (Extension._legacySnakeCase)
+                    {
+                        builder.Append(" (with legacySnakeCase=true)");
+                    }
                     _logFragment = builder.ToString();
                 }
 

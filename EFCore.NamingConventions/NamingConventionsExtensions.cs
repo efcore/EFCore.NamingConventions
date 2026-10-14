@@ -10,13 +10,13 @@ public static class NamingConventionsExtensions
 {
     public static DbContextOptionsBuilder UseSnakeCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        CultureInfo? culture = null, bool useLegacySnakeCase = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithSnakeCaseNamingConvention(culture);
+            .WithSnakeCaseNamingConvention(culture).WithLegacySnakeCase(useLegacySnakeCase);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -24,9 +24,9 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null)
+        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null, bool useLegacySnakeCase = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, useLegacySnakeCase);
 
     public static DbContextOptionsBuilder UseLowerCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
@@ -72,13 +72,15 @@ public static class NamingConventionsExtensions
 
     public static DbContextOptionsBuilder UseUpperSnakeCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        CultureInfo? culture = null,
+        bool useLegacySnakeCase = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithUpperSnakeCaseNamingConvention(culture);
+            .WithUpperSnakeCaseNamingConvention(culture)
+            .WithSnakeCaseNamingConvention(culture).WithLegacySnakeCase(useLegacySnakeCase);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -87,9 +89,10 @@ public static class NamingConventionsExtensions
 
     public static DbContextOptionsBuilder<TContext> UseUpperSnakeCaseNamingConvention<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
-        CultureInfo? culture = null)
+        CultureInfo? culture = null,
+        bool useLegacySnakeCase = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseUpperSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, useLegacySnakeCase);
 
     public static DbContextOptionsBuilder UseCamelCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
