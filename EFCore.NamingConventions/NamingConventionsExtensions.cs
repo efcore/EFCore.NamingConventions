@@ -10,13 +10,14 @@ public static class NamingConventionsExtensions
 {
     public static DbContextOptionsBuilder UseSnakeCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
-        CultureInfo? culture = null)
+        CultureInfo? culture = null,
+        bool ignoreMigrationHistoryTable = false)
     {
         Check.NotNull(optionsBuilder, nameof(optionsBuilder));
 
         var extension = (optionsBuilder.Options.FindExtension<NamingConventionsOptionsExtension>()
                 ?? new NamingConventionsOptionsExtension())
-            .WithSnakeCaseNamingConvention(culture);
+            .WithSnakeCaseNamingConvention(culture, ignoreMigrationHistoryTable);
 
         ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
 
@@ -24,9 +25,9 @@ public static class NamingConventionsExtensions
     }
 
     public static DbContextOptionsBuilder<TContext> UseSnakeCaseNamingConvention<TContext>(
-        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null)
+        this DbContextOptionsBuilder<TContext> optionsBuilder , CultureInfo? culture = null, bool ignoreMigrationHistoryTable = false)
         where TContext : DbContext
-        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture);
+        => (DbContextOptionsBuilder<TContext>)UseSnakeCaseNamingConvention((DbContextOptionsBuilder)optionsBuilder, culture, ignoreMigrationHistoryTable);
 
     public static DbContextOptionsBuilder UseLowerCaseNamingConvention(
         this DbContextOptionsBuilder optionsBuilder,
