@@ -507,6 +507,29 @@ public class NameRewritingConvention :
                 }
             }
 
+            // With entity splitting, the primary key constraint exists in the main table and in every fragment table, but the key's name
+            // annotation is a single, global one - the name we rewrote in ProcessKeyAdded would be used for the constraint in every one of
+            // those tables, producing duplicate constraint names in the database (#314). The same applies to the row-internal foreign key
+            // linking each fragment table back to the main table: its default name is derived from the entity's main table on both sides,
+            // so the rewritten name never references the fragment table and collides when there's more than one fragment.
+            // EF doesn't yet support configuring different constraint names for the same key/foreign key across different tables
+            // (as with TPT, see the note in ProcessEntityTypeAnnotationChanged), so undo our rewriting and let EF's per-table default
+            // names apply.
+            if (entityType.GetMappingFragments(StoreObjectType.Table).Any()
+                && entityType.FindPrimaryKey() is { } primaryKey)
+            {
+                primaryKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+
+                foreach (var foreignKey in entityType.GetDeclaredForeignKeys())
+                {
+                    if (foreignKey.PrincipalEntityType == entityType
+                        && foreignKey.Properties.SequenceEqual(primaryKey.Properties))
+                    {
+                        foreignKey.Builder.HasNoAnnotation(RelationalAnnotationNames.Name);
+                    }
+                }
+            }
+
             foreach (var property in entityType.GetProperties())
             {
                 var columnName = property.GetColumnName();

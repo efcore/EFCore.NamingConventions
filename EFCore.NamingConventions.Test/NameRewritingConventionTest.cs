@@ -787,6 +787,69 @@ public class NameRewritingConventionTest
         Assert.Equal("fk_card_board_board_id", entityType.GetForeignKeys().Single().GetConstraintName());
     }
 
+    [Fact] // #314
+    public void Entity_splitting_primary_key_constraint_names_are_distinct_per_table()
+    {
+        var entityType = BuildEntityType(b => b.Entity<SplitEntity>(
+            e => e.SplitToTable(
+                "SplitEntityDetails", tb =>
+                {
+                    tb.Property(s => s.SplitProperty);
+                })));
+
+        var primaryKey = entityType.FindPrimaryKey()!;
+
+        // The primary key constraint exists in the main table and in every fragment table, but its
+        // name annotation is global to the key - a single rewritten name would produce duplicate
+        // constraint names across the tables. The convention leaves EF's per-table defaults in
+        // place instead, as it already does for TPT hierarchies.
+        Assert.Equal("PK_split_entity", primaryKey.GetName(StoreObjectIdentifier.Table("split_entity")));
+        Assert.Equal("PK_SplitEntityDetails", primaryKey.GetName(StoreObjectIdentifier.Table("SplitEntityDetails")));
+    }
+
+    [Fact] // #314
+    public void Entity_splitting_linking_foreign_key_constraint_names_are_distinct_per_table()
+    {
+        var entityType = BuildEntityType(b => b.Entity<SplitEntity>(
+            e => e.SplitToTable(
+                "SplitEntityDetails", tb =>
+                {
+                    tb.Property(s => s.SplitProperty);
+                })));
+
+        // The row-internal foreign key linking each fragment table back to the main table is also a
+        // single model object whose name annotation is global - and its default name is derived from
+        // the entity's main table on both sides, so the rewritten name never references the fragment
+        // table and collides when there is more than one fragment. EF's per-table defaults name each
+        // linking constraint for its own fragment table.
+        var linkingForeignKey = entityType.GetForeignKeys().Single(fk => fk.PrincipalEntityType == fk.DeclaringEntityType);
+
+        Assert.Equal(
+            "FK_SplitEntityDetails_split_entity_id",
+            linkingForeignKey.GetConstraintName(
+                StoreObjectIdentifier.Table("SplitEntityDetails"), StoreObjectIdentifier.Table("split_entity")));
+    }
+
+    [Fact]
+    public void Entity_splitting_does_not_rewrite_the_explicitly_configured_fragment_table_name()
+    {
+        var entityType = BuildEntityType(b => b.Entity<SplitEntity>(
+            e => e.SplitToTable(
+                "SplitEntityDetails", tb =>
+                {
+                    tb.Property(s => s.SplitProperty);
+                })));
+
+        // SplitToTable always takes an explicitly-specified table name, and explicitly-configured
+        // names are never rewritten.
+        var fragment = Assert.Single(entityType.GetMappingFragments());
+        Assert.Equal("SplitEntityDetails", fragment.StoreObject.Name);
+        Assert.Equal(
+            "split_property",
+            entityType.FindProperty(nameof(SplitEntity.SplitProperty))!
+                .GetColumnName(StoreObjectIdentifier.Table("SplitEntityDetails")));
+    }
+
     private static IEntityType BuildEntityType(Action<ModelBuilder> builderAction, CultureInfo? culture = null)
         => BuildModel(builderAction, culture).GetEntityTypes().Single();
 
@@ -936,6 +999,13 @@ public class NameRewritingConventionTest
         public int Id { get; set; }
         public int PrincipalId { get; set; }
         public required ReferenceNavigationPrincipal Principal { get; set; }
+    }
+
+    public class SplitEntity
+    {
+        public int Id { get; set; }
+        public string? MainProperty { get; set; }
+        public string? SplitProperty { get; set; }
     }
 
     public class Board
