@@ -44,6 +44,7 @@ SELECT c.id, c.full_name
 ## Supported naming conventions
 
 * UseSnakeCaseNamingConvention: `FullName` becomes `full_name`
+* UseKebabCaseNamingConvention: `FullName` becomes `full-name`
 * UseLowerCaseNamingConvention: `FullName` becomes `fullname`
 * UseCamelCaseNamingConvention: `FullName` becomes `fullName`
 * UseUpperCaseNamingConvention: `FullName` becomes `FULLNAME`
