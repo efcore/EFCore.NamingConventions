@@ -6,7 +6,7 @@ public class UpperSnakeCaseNameRewriter : SnakeCaseNameRewriter
 {
     private readonly CultureInfo _culture;
 
-    public UpperSnakeCaseNameRewriter(CultureInfo culture) : base(culture)
+    public UpperSnakeCaseNameRewriter(CultureInfo culture, bool legacySnakeCase) : base(culture, legacySnakeCase)
         => _culture = culture;
 
     public override string RewriteName(string name)

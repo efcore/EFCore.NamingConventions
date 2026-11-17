@@ -1,18 +1,27 @@
 using System;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 namespace EFCore.NamingConventions.Internal;
 
 public class SnakeCaseNameRewriter : INameRewriter
 {
     private readonly CultureInfo _culture;
+    private readonly bool _legacySnakeCase;
 
-    public SnakeCaseNameRewriter(CultureInfo culture)
-        => _culture = culture;
+    public SnakeCaseNameRewriter(CultureInfo culture, bool legacySnakeCase)
+    {
+        _culture = culture;
+        _legacySnakeCase = legacySnakeCase;
+    }
 
     public virtual string RewriteName(string name)
     {
+        if (!_legacySnakeCase)
+        {
+            return JsonNamingPolicy.SnakeCaseLower.ConvertName(name);
+        }
         var builder = new StringBuilder(name.Length + Math.Min(2, name.Length / 5));
         var previousCategory = default(UnicodeCategory?);
 

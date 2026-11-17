@@ -26,6 +26,7 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
             new NamingConventionsOptionsExtension().WithoutNaming();
         var namingStyle = extension.NamingConvention;
         var culture = extension.Culture;
+        var legacySnakeCase = extension.LegacySnakeCase;
         if (namingStyle == NamingConvention.None)
         {
             return conventionSet;
@@ -33,11 +34,11 @@ public class NamingConventionSetPlugin : IConventionSetPlugin
 
         var convention = new NameRewritingConvention(_dependencies, namingStyle switch
         {
-            NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
+            NamingConvention.SnakeCase => new SnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture, legacySnakeCase),
             NamingConvention.LowerCase => new LowerCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
             NamingConvention.CamelCase => new CamelCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
             NamingConvention.UpperCase => new UpperCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
-            NamingConvention.UpperSnakeCase => new UpperSnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture),
+            NamingConvention.UpperSnakeCase => new UpperSnakeCaseNameRewriter(culture ?? CultureInfo.InvariantCulture, legacySnakeCase),
             _ => throw new ArgumentOutOfRangeException("Unhandled enum value: " + namingStyle)
         });
 
