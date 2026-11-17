@@ -1,16 +1,16 @@
 <Project>
   <PropertyGroup>
-    <EFCoreVersion>[10.0.14, 11.0.0)</EFCoreVersion>
-    <MicrosoftExtensionsVersion>10.0.14</MicrosoftExtensionsVersion>
+    <EFCoreVersion>[11.0.0, 12.0.0)</EFCoreVersion>
+    <MicrosoftExtensionsVersion>11.0.0</MicrosoftExtensionsVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="$(EFCoreVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.403" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="11.0.100" />
     <!-- Test -->
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="$(EFCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
