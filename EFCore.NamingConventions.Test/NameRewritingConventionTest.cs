@@ -117,10 +117,26 @@ public class NameRewritingConventionTest
     }
 
     [Fact]
+    public void Foreign_key_with_explicit_constraint_name()
+    {
+        var model = BuildModel(b => b.Entity<Blog>().HasMany(p => p.Posts)
+            .WithOne(p => p.Blog).HasForeignKey(p => p.BlogId).HasConstraintName("MY_FK_CONSTRAINT"));
+        var entityType = model.FindEntityType(typeof(Post))!;
+        Assert.Equal("MY_FK_CONSTRAINT", entityType.GetForeignKeys().Single().GetConstraintName());
+    }
+
+    [Fact]
     public void Index()
     {
         var entityType = BuildEntityType(b => b.Entity<SampleEntity>().HasIndex(s => s.SomeProperty));
         Assert.Equal("ix_sample_entity_some_property", entityType.GetIndexes().Single().GetDatabaseName());
+    }
+
+    [Fact]
+    public void Index_with_explicit_name()
+    {
+        var entityType = BuildEntityType(b => b.Entity<SampleEntity>().HasIndex(s => s.SomeProperty, "MY_INDEX"));
+        Assert.Equal("MY_INDEX", entityType.GetIndexes().Single().GetDatabaseName());
     }
 
     [Fact]
